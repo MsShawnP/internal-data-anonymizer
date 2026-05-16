@@ -59,8 +59,23 @@ async def upload_file(project_id: str, file: UploadFile):
         "INSERT OR REPLACE INTO files (id, filename, uploaded_at, row_count, column_count) VALUES (?, ?, ?, ?, ?)",
         (file_id, file.filename, datetime.now(timezone.utc).isoformat(), len(df), len(df.columns)),
     )
+
+    import json
+
+    # Check existing mappings for multi-file reuse (U10)
+    existing_mappings = project_db.execute(
+        "SELECT column_name, original, anonymized FROM mappings"
+    ).fetchall()
+    existing_by_col: dict[str, dict[str, str]] = {}
+    for row in existing_mappings:
+        col = row["column_name"]
+        if col not in existing_by_col:
+            existing_by_col[col] = {}
+        existing_by_col[col][row["original"]] = row["anonymized"]
+
+    reuse_summary: dict[str, dict] = {}
+
     for p in profiles:
-        import json
         project_db.execute(
             "INSERT INTO columns (file_id, name, dtype, strategy, profile_json) VALUES (?, ?, ?, ?, ?)",
             (file_id, p.name, p.dtype, p.suggested_strategy, json.dumps({
@@ -71,14 +86,35 @@ async def upload_file(project_id: str, file: UploadFile):
                 "stats": p.stats,
             })),
         )
+
+        # For columns with existing mappings, partition values
+        if p.name in existing_by_col:
+            col_unique = set(df[p.name].dropna().astype(str).unique())
+            known = existing_by_col[p.name]
+            already_mapped = col_unique & set(known.keys())
+            new_values = col_unique - set(known.keys())
+            reuse_summary[p.name] = {
+                "auto_applied": len(already_mapped),
+                "new_values": len(new_values),
+                "total": len(col_unique),
+            }
+
     project_db.commit()
     project_db.close()
+
+    # Determine if all columns are fully covered by existing mappings
+    all_covered = all(
+        reuse_summary.get(p.name, {}).get("new_values", p.unique_count) == 0
+        for p in profiles
+    )
 
     return {
         "file_id": file_id,
         "filename": file.filename,
         "row_count": len(df),
         "column_count": len(df.columns),
+        "reuse_summary": reuse_summary,
+        "all_values_mapped": all_covered,
         "columns": [
             {
                 "name": p.name,

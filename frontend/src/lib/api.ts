@@ -72,3 +72,25 @@ export function updateColumnStrategy(
 		body: JSON.stringify({ strategy })
 	});
 }
+
+export function generateColumnMappings(
+	projectId: string,
+	fileId: string,
+	colName: string
+): Promise<{ column: string; strategy: string; mappings: { original: string; anonymized: string }[] }> {
+	return request(`/projects/${projectId}/files/${fileId}/columns/${colName}/generate`, {
+		method: 'POST'
+	});
+}
+
+export function exportFile(
+	projectId: string,
+	fileId: string,
+	format: string = 'csv'
+): Promise<Blob> {
+	return fetch(`${BASE}/projects/${projectId}/files/${fileId}/export?format=${format}`)
+		.then(res => {
+			if (!res.ok) throw new Error(`Export failed: ${res.status}`);
+			return res.blob();
+		});
+}
