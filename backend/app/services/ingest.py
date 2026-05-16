@@ -6,9 +6,9 @@ import pandas as pd
 def read_file(path: Path) -> pd.DataFrame:
     suffix = path.suffix.lower()
     readers = {
-        ".csv": pd.read_csv,
-        ".xlsx": lambda p: pd.read_excel(p, engine="openpyxl"),
-        ".json": pd.read_json,
+        ".csv": lambda p: pd.read_csv(p, dtype=str, keep_default_na=False),
+        ".xlsx": lambda p: pd.read_excel(p, engine="openpyxl", dtype=str, keep_default_na=False),
+        ".json": lambda p: pd.read_json(p, dtype=str),
         ".parquet": pd.read_parquet,
     }
     reader = readers.get(suffix)

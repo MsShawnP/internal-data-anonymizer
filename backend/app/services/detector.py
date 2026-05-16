@@ -46,6 +46,7 @@ def _is_upc_valid(code: str) -> bool:
 
 def _classify_column(series: pd.Series) -> tuple[str, str]:
     non_null = series.dropna().astype(str)
+    non_null = non_null[non_null.str.strip() != ""]
     if len(non_null) == 0:
         return "empty", "passthrough"
 
@@ -97,11 +98,23 @@ def _classify_column(series: pd.Series) -> tuple[str, str]:
     return "generic_string", "hash"
 
 
+def _infer_dtype(series: pd.Series, detected_type: str) -> str:
+    if detected_type == "numeric":
+        numeric = pd.to_numeric(series.dropna(), errors="coerce")
+        if numeric.notna().any():
+            if (numeric == numeric.astype(int)).all():
+                return "int64"
+            return "float64"
+    if detected_type in ("date",):
+        return "str"
+    return "str"
+
+
 def profile_columns(df: pd.DataFrame) -> list[ColumnProfile]:
     profiles = []
     for col in df.columns:
         series = df[col]
-        non_null = series.dropna()
+        non_null = series[series.astype(str).str.strip() != ""]
         detected_type, strategy = _classify_column(series)
 
         sample = non_null.head(5).astype(str).tolist() if len(non_null) > 0 else []
@@ -120,7 +133,7 @@ def profile_columns(df: pd.DataFrame) -> list[ColumnProfile]:
         profiles.append(
             ColumnProfile(
                 name=col,
-                dtype=str(series.dtype),
+                dtype=_infer_dtype(series, detected_type),
                 unique_count=int(non_null.nunique()),
                 null_rate=round(float(series.isna().mean()), 4),
                 sample_values=sample,

@@ -10,6 +10,10 @@
 	} = $props();
 
 	let selectedStrategy = $state<Strategy>(column.strategy as Strategy);
+
+	$effect(() => {
+		selectedStrategy = column.strategy as Strategy;
+	});
 </script>
 
 <div class="column-card">

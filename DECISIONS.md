@@ -37,6 +37,12 @@ Each entry:
 - **Scope:** Global
 - **Do not:** Add SSR or server-side rendering — this is a local tool.
 
+### 2026-05-16 — Read tabular files as strings, detect types after
+- **Decision:** CSV/XLSX/JSON ingested with `dtype=str` (and `keep_default_na=False`). Type detection happens post-read via regex + `pd.to_numeric` coercion.
+- **Why:** Pandas auto-infers int64 for digit-only columns, stripping leading zeros from UPCs, GTINs, and zip codes. Reading as strings preserves the raw representation so the detector can correctly identify format-preserving identifiers.
+- **Scope:** backend/app/services/ingest.py, detector.py
+- **Do not:** Let pandas auto-infer dtypes on user-uploaded files.
+
 ---
 
 ## Data & Schema

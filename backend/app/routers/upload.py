@@ -15,6 +15,21 @@ UPLOAD_DIR = Path(__file__).resolve().parent.parent.parent / "uploads"
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
 
 
+@router.get("/files")
+async def list_files(project_id: str):
+    conn = get_conn()
+    if not conn.execute("SELECT id FROM projects WHERE id = ?", (project_id,)).fetchone():
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    project_db = get_project_db(project_id)
+    rows = project_db.execute(
+        "SELECT id, filename, uploaded_at, row_count, column_count FROM files ORDER BY uploaded_at DESC"
+    ).fetchall()
+    project_db.close()
+
+    return [dict(row) for row in rows]
+
+
 @router.post("/upload")
 async def upload_file(project_id: str, file: UploadFile):
     conn = get_conn()

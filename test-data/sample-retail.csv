@@ -1,0 +1,11 @@
+customer_name,email,phone,product_name,upc,price,quantity,order_date,zip_code
+Alice Johnson,alice.johnson@gmail.com,555-123-4567,Organic Whole Milk,041220085828,4.99,2,2024-03-15,90210
+Bob Smith,bob.smith@yahoo.com,555-987-6543,Crunchy Peanut Butter,051500255124,6.49,1,2024-03-15,10001
+Carol Davis,carol.d@hotmail.com,555-222-3333,Sourdough Bread,079893104201,5.99,3,2024-03-16,60614
+Dave Wilson,dave.wilson@gmail.com,555-444-5555,Greek Yogurt Plain,041220085828,3.49,4,2024-03-16,30301
+Eve Martinez,eve.m@outlook.com,555-666-7777,Cage Free Eggs,041220085828,5.29,1,2024-03-17,98101
+Frank Lee,frank.lee@gmail.com,555-888-9999,Avocado Oil,041220085828,8.99,2,2024-03-17,33101
+Grace Kim,grace.kim@yahoo.com,555-111-2222,Wild Salmon Fillet,079893104201,12.99,1,2024-03-18,02101
+Henry Brown,henry.b@gmail.com,555-333-4444,Almond Milk Unsweetened,051500255124,4.29,2,2024-03-18,75201
+Iris Patel,iris.p@outlook.com,555-555-6666,Extra Virgin Olive Oil,041220085828,9.99,1,2024-03-19,94102
+Jack Thompson,jack.t@gmail.com,555-777-8888,Honey Wheat Bread,079893104201,4.49,2,2024-03-19,20001
