@@ -9,6 +9,18 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-16 23:00 — Browser testing, bug fixes, README, ship
+
+**Started from:** All 10 units implemented, 81 tests passing, not yet browser-tested.
+
+**Did:** End-to-end browser walkthrough of full flow. Fixed 3 bugs (strategy select reset, file list on project page, leading-zero preservation). Wrote README with worked example. Merged to main, pushed, set public.
+
+**State:** Shipped. Repo public at github.com/MsShawnP/internal-data-anonymizer. App works end-to-end for happy path. Minor known issue: "name" type doesn't distinguish person vs product names.
+
+**Next:** Arc complete. Future work if returning: (a) person-name vs product-name detection, (b) zip code as format-preserving type, (c) portfolio piece.
+
+---
+
 ## 2026-05-16 — All 10 implementation units complete
 
 **Started from:** Plan approved after `/ce:brainstorm` → `/ce:plan` → `/ce:doc-review`.

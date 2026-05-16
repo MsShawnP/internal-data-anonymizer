@@ -77,7 +77,7 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 - [ ] Dirty-data fidelity: invalid originals produce invalid fakes at same rate
 - [ ] Reverse lookup available in UI for the operator
 - [ ] Project-level mapping persistence
-- [ ] Public GitHub repo with README and worked example
+- [x] Public GitHub repo with README and worked example
 - ~~One portfolio piece on Lailara site using the tool's output~~ (deferred)
 
 ---
@@ -87,3 +87,8 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 When an arc completes, archive its goal, completion date, and outcome
 here. Then start a new arc above. Provides continuity without bloating
 the active plan.
+
+### 2026-05-16 — v1 shipped
+- **Goal:** Build a web-based data anonymization tool with deterministic mappings, format-preserving fakes, and reverse lookup.
+- **Outcome:** Shipped. 10 implementation units, 81 backend tests, full UI flow working. Public repo with README and worked example.
+- **Deferred:** Portfolio piece on Lailara site, person-vs-product name detection, zip code format-preserving type.
