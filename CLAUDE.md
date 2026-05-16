@@ -4,18 +4,23 @@ Tier: Medium
 
 ## What this project is
 
-[One paragraph. What it is, who it's for, what done looks like at the
-highest level. Filled in based on the 95% confidence prompt conversation.]
+Local web app that anonymizes tabular data through a guided column-by-column
+review workflow. Deterministic project-level mappings in SQLite, format-preserving
+fakes for product/retail data, and bidirectional reverse lookup. For solo
+consulting use and as a portfolio piece demonstrating product engineering.
 
-**Business question this project answers:** [One sentence. If you can't
-write this sentence cleanly, the project isn't scoped enough yet.]
+**Business question this project answers:** Can I ship a polished, publicly
+visible tool that demonstrates product engineering skill while also being
+genuinely useful in my consulting practice?
 
 ## Stack and tools
 
-- Primary language: TBD
-- Key packages/libraries: TBD
-- Database: TBD
-- Entry point: TBD
+- Backend: Python 3.10+ / FastAPI
+- Frontend: Svelte 5 / SvelteKit (SPA mode, adapter-static)
+- Database: SQLite (WAL mode, root app.db + per-project mappings.db)
+- Key packages: pandas, Faker (custom providers), aiofiles, sse-starlette
+- Dev: uvicorn (port 8000) + vite dev (port 5173, proxies /api)
+- Entry point: `backend/app/main.py` (FastAPI), `frontend/src/routes/` (SvelteKit)
 
 ## Project files
 

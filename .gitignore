@@ -3,3 +3,19 @@ Thumbs.db
 .env
 .env.*
 .claude-project-url
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+frontend/build/
+frontend/.svelte-kit/
+
+# Data (runtime artifacts)
+backend/data/
+backend/uploads/
