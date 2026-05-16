@@ -63,9 +63,9 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 
 ## Remaining before ship
 
-- [ ] End-to-end browser testing of full flow
-- [ ] README with worked example
-- [ ] Portfolio piece on Lailara site
+- [x] End-to-end browser testing of full flow
+- [x] README with worked example
+- ~~Portfolio piece on Lailara site~~ (skipped — separate concern)
 
 ## Definition of done for this arc
 
@@ -78,7 +78,7 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 - [ ] Reverse lookup available in UI for the operator
 - [ ] Project-level mapping persistence
 - [ ] Public GitHub repo with README and worked example
-- [ ] One portfolio piece on Lailara site using the tool's output
+- ~~One portfolio piece on Lailara site using the tool's output~~ (deferred)
 
 ---
 
