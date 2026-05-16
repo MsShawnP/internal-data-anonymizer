@@ -48,7 +48,24 @@ engineering skill while also being genuinely useful in my consulting practice?
 
 ## Tasks
 
-[To be defined after /ce:brainstorm and /ce:plan]
+All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-plan.md`:
+
+- [x] U1: Project scaffolding — FastAPI + SvelteKit monorepo with SQLite
+- [x] U2: Project dashboard — CRUD endpoints and Svelte dashboard UI
+- [x] U3: File upload and column detection engine
+- [x] U4: Strategy review UI — column-by-column confirmation flow
+- [x] U5: Anonymization engine with custom Faker providers
+- [x] U6: Rank-preserving numeric jitter with histogram preview
+- [x] U7: Mapping review and edit UI (MappingTable, PatternRuleEditor)
+- [x] U8: Apply mappings and multi-format export
+- [x] U9: Reverse lookup (SearchBar, click-to-reveal in DataPreview)
+- [x] U10: Multi-file mapping reuse
+
+## Remaining before ship
+
+- [ ] End-to-end browser testing of full flow
+- [ ] README with worked example
+- [ ] Portfolio piece on Lailara site
 
 ## Definition of done for this arc
 
