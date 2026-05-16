@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .db import close_db, init_db
-from .routers import projects, upload
+from .routers import columns, export, mappings, projects, upload
 
 
 @asynccontextmanager
@@ -17,6 +17,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Data Anonymizer", lifespan=lifespan)
 app.include_router(projects.router)
 app.include_router(upload.router)
+app.include_router(columns.router)
+app.include_router(mappings.router)
+app.include_router(export.router)
 
 app.add_middleware(
     CORSMiddleware,
