@@ -87,11 +87,11 @@
 	}
 	.back {
 		font-size: 13px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		text-decoration: none;
 	}
 	.back:hover {
-		color: #2a2a2a;
+		color: var(--ll-london-20);
 	}
 	h1 {
 		font-family: 'Playfair Display', Georgia, serif;
@@ -101,7 +101,7 @@
 	}
 	.subtitle {
 		font-size: 14px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		margin: 4px 0 0;
 	}
 	.upload-area {
@@ -109,7 +109,7 @@
 		flex-direction: column;
 		gap: 12px;
 		padding: 24px;
-		border: 2px dashed #d8d4c8;
+		border: 2px dashed var(--ll-london-85);
 		border-radius: 2px;
 		background: white;
 	}
@@ -122,20 +122,20 @@
 	}
 	.file-label {
 		padding: 12px 16px;
-		border: 1px solid #d8d4c8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		cursor: pointer;
 		font-size: 15px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		text-align: center;
 	}
 	.file-label:hover {
-		border-color: #1b3a5c;
-		color: #2a2a2a;
+		border-color: var(--ll-chicago-20);
+		color: var(--ll-london-20);
 	}
 	.upload-btn {
 		padding: 10px 20px;
-		background: #1b3a5c;
+		background: var(--ll-chicago-20);
 		color: white;
 		border: none;
 		border-radius: 2px;
@@ -145,14 +145,14 @@
 		cursor: pointer;
 	}
 	.upload-btn:hover:not(:disabled) {
-		background: #14304b;
+		background: var(--ll-chicago-10);
 	}
 	.upload-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
 	.error {
-		color: #c54b4b;
+		color: var(--ll-red-42);
 		font-size: 14px;
 		margin-top: 12px;
 	}

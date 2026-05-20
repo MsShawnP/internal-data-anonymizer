@@ -79,11 +79,11 @@
 	}
 	.back {
 		font-size: 13px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		text-decoration: none;
 	}
 	.back:hover {
-		color: #2a2a2a;
+		color: var(--ll-london-20);
 	}
 	h1 {
 		font-family: 'Playfair Display', Georgia, serif;
@@ -103,7 +103,7 @@
 	}
 	.btn {
 		padding: 8px 16px;
-		background: #1b3a5c;
+		background: var(--ll-chicago-20);
 		color: white;
 		border-radius: 2px;
 		text-decoration: none;
@@ -111,23 +111,23 @@
 		font-weight: 600;
 	}
 	.btn:hover {
-		background: #14304b;
+		background: var(--ll-chicago-10);
 	}
 	.btn-secondary {
 		padding: 8px 16px;
 		background: white;
-		color: #1b3a5c;
-		border: 1px solid #d8d4c8;
+		color: var(--ll-chicago-20);
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		text-decoration: none;
 		font-size: 14px;
 		font-weight: 600;
 	}
 	.btn-secondary:hover {
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 	}
 	.status {
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		font-size: 15px;
 	}
 	.files-section {
@@ -139,7 +139,7 @@
 		margin: 0;
 	}
 	.file-card {
-		border: 1px solid #e5e0d8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		margin-bottom: 8px;
 		background: white;
@@ -152,7 +152,7 @@
 		color: inherit;
 	}
 	.file-link:hover {
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 	}
 	.file-name {
 		font-weight: 600;
@@ -160,7 +160,7 @@
 	}
 	.file-meta {
 		font-size: 13px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		margin-top: 2px;
 	}
 	.search-section {

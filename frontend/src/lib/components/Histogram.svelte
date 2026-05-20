@@ -47,7 +47,7 @@
 				y1={PADDING.top + chartHeight * (1 - tick)}
 				x2={WIDTH - PADDING.right}
 				y2={PADDING.top + chartHeight * (1 - tick)}
-				stroke="#e5e0d8"
+				stroke="var(--ll-london-85)"
 				stroke-width="0.5"
 			/>
 		{/each}
@@ -59,7 +59,7 @@
 				y={barY(count)}
 				width={barWidth()}
 				height={barHeight(count)}
-				fill="#4a7ba7"
+				fill="var(--ll-chicago-70)"
 				opacity="0.7"
 			/>
 		{/each}
@@ -71,7 +71,7 @@
 				y={barY(count)}
 				width={barWidth()}
 				height={barHeight(count)}
-				fill="#1b3a5c"
+				fill="var(--ll-chicago-20)"
 				opacity="0.7"
 			/>
 		{/each}
@@ -82,18 +82,18 @@
 			y1={PADDING.top + chartHeight}
 			x2={WIDTH - PADDING.right}
 			y2={PADDING.top + chartHeight}
-			stroke="#2a2a2a"
+			stroke="var(--ll-london-20)"
 			stroke-width="0.5"
 		/>
 	</svg>
 
 	<div class="legend">
 		<span class="legend-item">
-			<span class="swatch" style="background: #4a7ba7;"></span>
+			<span class="swatch" style="background: var(--ll-chicago-70);"></span>
 			Original (μ={stats.original_mean.toFixed(1)}, σ={stats.original_std.toFixed(1)})
 		</span>
 		<span class="legend-item">
-			<span class="swatch" style="background: #1b3a5c;"></span>
+			<span class="swatch" style="background: var(--ll-chicago-20);"></span>
 			Jittered (μ={stats.jittered_mean.toFixed(1)}, σ={stats.jittered_std.toFixed(1)})
 		</span>
 	</div>
@@ -112,7 +112,7 @@
 		display: flex;
 		gap: 16px;
 		font-size: 11px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		margin-top: 4px;
 	}
 	.legend-item {

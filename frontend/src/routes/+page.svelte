@@ -97,7 +97,7 @@
 	}
 	.subtitle {
 		font-size: 14px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		margin: 4px 0 0;
 	}
 	.create-form {
@@ -108,19 +108,19 @@
 	input {
 		flex: 1;
 		padding: 8px 12px;
-		border: 1px solid #d8d4c8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		font-family: inherit;
 		font-size: 15px;
 		background: white;
 	}
 	input:focus {
-		outline: 2px solid #2a2a2a;
+		outline: 2px solid var(--ll-london-20);
 		outline-offset: 2px;
 	}
 	button {
 		padding: 8px 16px;
-		background: #1b3a5c;
+		background: var(--ll-chicago-20);
 		color: white;
 		border: none;
 		border-radius: 2px;
@@ -130,18 +130,18 @@
 		cursor: pointer;
 	}
 	button:hover:not(:disabled) {
-		background: #14304b;
+		background: var(--ll-chicago-10);
 	}
 	button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
 	.status {
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		font-size: 15px;
 	}
 	.status.error {
-		color: #c54b4b;
+		color: var(--ll-red-42);
 	}
 	.project-list {
 		list-style: none;
@@ -151,7 +151,7 @@
 	.project-card {
 		display: flex;
 		align-items: center;
-		border: 1px solid #e5e0d8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		margin-bottom: 8px;
 		background: white;
@@ -165,7 +165,7 @@
 		color: inherit;
 	}
 	.project-link:hover {
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 	}
 	.project-name {
 		font-weight: 600;
@@ -173,19 +173,19 @@
 	}
 	.project-meta {
 		font-size: 13px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		margin-top: 2px;
 	}
 	.delete-btn {
 		padding: 8px 12px;
 		background: transparent;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		font-size: 18px;
 		border: none;
 		cursor: pointer;
 	}
 	.delete-btn:hover {
-		color: #c54b4b;
+		color: var(--ll-red-42);
 		background: transparent;
 	}
 </style>

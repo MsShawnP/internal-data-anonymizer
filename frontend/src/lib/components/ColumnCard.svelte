@@ -85,7 +85,7 @@
 
 <style>
 	.column-card {
-		border: 1px solid #d8d4c8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		background: white;
 		max-width: 560px;
@@ -96,7 +96,7 @@
 		align-items: baseline;
 		justify-content: space-between;
 		padding: 16px 20px;
-		border-bottom: 1px solid #e5e0d8;
+		border-bottom: 1px solid var(--ll-london-85);
 	}
 	.column-name {
 		font-family: 'Playfair Display', Georgia, serif;
@@ -106,11 +106,11 @@
 	}
 	.detected-type {
 		font-size: 13px;
-		color: #6b6b6b;
-		background: #f8f6f1;
+		color: var(--ll-london-35);
+		background: var(--ll-canvas);
 		padding: 2px 8px;
 		border-radius: 2px;
-		border: 1px solid #e5e0d8;
+		border: 1px solid var(--ll-london-85);
 	}
 	.card-body {
 		padding: 16px 20px;
@@ -119,14 +119,14 @@
 		display: flex;
 		justify-content: space-between;
 		padding: 6px 0;
-		border-bottom: 1px solid #f0ede7;
+		border-bottom: 1px solid var(--ll-london-90);
 	}
 	.profile-row:last-child {
 		border-bottom: none;
 	}
 	.label {
 		font-size: 14px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 	}
 	.value {
 		font-size: 14px;
@@ -136,7 +136,7 @@
 	.samples-section {
 		margin-top: 12px;
 		padding-top: 12px;
-		border-top: 1px solid #e5e0d8;
+		border-top: 1px solid var(--ll-london-85);
 	}
 	.stats-grid {
 		display: flex;
@@ -148,12 +148,12 @@
 		display: flex;
 		flex-direction: column;
 		font-size: 13px;
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 		padding: 4px 8px;
 		border-radius: 2px;
 	}
 	.stat-key {
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		font-size: 11px;
 		text-transform: uppercase;
 	}
@@ -168,10 +168,10 @@
 	}
 	.sample-value {
 		font-size: 13px;
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 		padding: 2px 8px;
 		border-radius: 2px;
-		border: 1px solid #e5e0d8;
+		border: 1px solid var(--ll-london-85);
 		font-family: monospace;
 	}
 	.card-footer {
@@ -179,8 +179,8 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 16px 20px;
-		border-top: 1px solid #e5e0d8;
-		background: #fcfbf9;
+		border-top: 1px solid var(--ll-london-85);
+		background: var(--ll-canvas);
 	}
 	.strategy-selector {
 		display: flex;
@@ -189,24 +189,24 @@
 	}
 	select {
 		padding: 6px 10px;
-		border: 1px solid #d8d4c8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		font-family: inherit;
 		font-size: 14px;
 		background: white;
 	}
 	select:focus {
-		outline: 2px solid #2a2a2a;
+		outline: 2px solid var(--ll-london-20);
 		outline-offset: 2px;
 	}
 	.override-indicator {
 		font-size: 12px;
-		color: #c54b4b;
+		color: var(--ll-red-42);
 		font-weight: 600;
 	}
 	.confirm-btn {
 		padding: 8px 20px;
-		background: #1b3a5c;
+		background: var(--ll-chicago-20);
 		color: white;
 		border: none;
 		border-radius: 2px;
@@ -216,6 +216,6 @@
 		cursor: pointer;
 	}
 	.confirm-btn:hover {
-		background: #14304b;
+		background: var(--ll-chicago-10);
 	}
 </style>

@@ -70,7 +70,7 @@
 
 <style>
 	.mapping-table {
-		border: 1px solid #e5e0d8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		background: white;
 		max-height: 400px;
@@ -80,15 +80,15 @@
 		display: grid;
 		grid-template-columns: 1fr 30px 1fr;
 		padding: 8px 12px;
-		border-bottom: 1px solid #e5e0d8;
+		border-bottom: 1px solid var(--ll-london-85);
 		font-size: 12px;
 		font-weight: 600;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 		position: sticky;
 		top: 0;
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 	}
 	.table-body {
 		font-size: 14px;
@@ -97,7 +97,7 @@
 		display: grid;
 		grid-template-columns: 1fr 30px 1fr;
 		padding: 6px 12px;
-		border-bottom: 1px solid #f0ece5;
+		border-bottom: 1px solid var(--ll-london-90);
 		align-items: center;
 	}
 	.table-row:last-child {
@@ -105,7 +105,7 @@
 	}
 	.col-arrow {
 		text-align: center;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 	}
 	.col-original {
 		font-family: monospace;
@@ -121,7 +121,7 @@
 		border-radius: 2px;
 	}
 	.clickable:hover {
-		background: #f0ece5;
+		background: var(--ll-london-90);
 	}
 	.editing {
 		display: flex;
@@ -131,7 +131,7 @@
 	.editing input {
 		flex: 1;
 		padding: 2px 6px;
-		border: 1px solid #1b3a5c;
+		border: 1px solid var(--ll-chicago-20);
 		border-radius: 2px;
 		font-family: monospace;
 		font-size: 13px;
@@ -145,9 +145,9 @@
 		background: transparent;
 	}
 	.save-btn {
-		color: #1b3a5c;
+		color: var(--ll-chicago-20);
 	}
 	.cancel-btn {
-		color: #c54b4b;
+		color: var(--ll-red-42);
 	}
 </style>

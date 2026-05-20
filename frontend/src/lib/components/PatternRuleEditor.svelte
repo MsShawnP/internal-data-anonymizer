@@ -115,7 +115,7 @@
 
 <style>
 	.pattern-editor {
-		border: 1px solid #e5e0d8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		padding: 16px;
 		background: white;
@@ -128,7 +128,7 @@
 	}
 	.description {
 		font-size: 13px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		margin: 0 0 12px;
 	}
 	.samples {
@@ -140,14 +140,14 @@
 	}
 	.samples-label {
 		font-size: 12px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 	}
 	.samples code {
 		font-size: 12px;
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 		padding: 2px 6px;
 		border-radius: 2px;
-		border: 1px solid #e5e0d8;
+		border: 1px solid var(--ll-london-85);
 	}
 	.palette {
 		display: flex;
@@ -157,15 +157,15 @@
 	}
 	.palette-btn {
 		padding: 4px 8px;
-		border: 1px solid #d8d4c8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 		cursor: pointer;
 		font-family: monospace;
 		font-size: 12px;
 	}
 	.palette-btn:hover {
-		border-color: #1b3a5c;
+		border-color: var(--ll-chicago-20);
 		background: white;
 	}
 	.input-row {
@@ -176,26 +176,26 @@
 	.input-row input {
 		flex: 1;
 		padding: 6px 10px;
-		border: 1px solid #d8d4c8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		font-family: monospace;
 		font-size: 14px;
 	}
 	.input-row input:focus {
 		outline: none;
-		border-color: #1b3a5c;
+		border-color: var(--ll-chicago-20);
 	}
 	.clear-btn {
 		padding: 6px 12px;
-		border: 1px solid #d8d4c8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		background: white;
 		cursor: pointer;
 		font-size: 13px;
 	}
 	.clear-btn:hover {
-		border-color: #c54b4b;
-		color: #c54b4b;
+		border-color: var(--ll-red-42);
+		color: var(--ll-red-42);
 	}
 	.preview {
 		display: flex;
@@ -205,18 +205,18 @@
 	}
 	.preview-label {
 		font-size: 12px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 	}
 	.preview code {
 		font-size: 13px;
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 		padding: 2px 8px;
 		border-radius: 2px;
 	}
 	.apply-btn {
 		width: 100%;
 		padding: 8px 16px;
-		background: #1b3a5c;
+		background: var(--ll-chicago-20);
 		color: white;
 		border: none;
 		border-radius: 2px;
@@ -226,7 +226,7 @@
 		cursor: pointer;
 	}
 	.apply-btn:hover:not(:disabled) {
-		background: #14304b;
+		background: var(--ll-chicago-10);
 	}
 	.apply-btn:disabled {
 		opacity: 0.5;

@@ -26,11 +26,11 @@
 	}
 	.back {
 		font-size: 13px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		text-decoration: none;
 	}
 	.back:hover {
-		color: #2a2a2a;
+		color: var(--ll-london-20);
 	}
 	h1 {
 		font-family: 'Playfair Display', Georgia, serif;
@@ -40,7 +40,7 @@
 	}
 	.subtitle {
 		font-size: 14px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		margin: 4px 0 0;
 	}
 </style>

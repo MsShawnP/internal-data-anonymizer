@@ -78,7 +78,7 @@
 	}
 	.table-scroll {
 		overflow-x: auto;
-		border: 1px solid #e5e0d8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		max-height: 500px;
 		overflow-y: auto;
@@ -92,18 +92,18 @@
 	th {
 		position: sticky;
 		top: 0;
-		background: #f8f6f1;
+		background: var(--ll-canvas);
 		padding: 8px 10px;
 		text-align: left;
 		font-size: 12px;
 		font-weight: 600;
 		font-family: 'Source Sans 3', sans-serif;
-		border-bottom: 1px solid #e5e0d8;
+		border-bottom: 1px solid var(--ll-london-85);
 		white-space: nowrap;
 	}
 	td {
 		padding: 5px 10px;
-		border-bottom: 1px solid #f0ece5;
+		border-bottom: 1px solid var(--ll-london-90);
 		white-space: nowrap;
 		max-width: 200px;
 		overflow: hidden;
@@ -113,10 +113,10 @@
 		cursor: pointer;
 	}
 	.cell:hover {
-		background: #f0ece5;
+		background: var(--ll-london-90);
 	}
 	.revealed {
-		background: #1b3a5c !important;
+		background: var(--ll-chicago-20) !important;
 		color: white;
 	}
 	.original-badge {
@@ -124,7 +124,7 @@
 	}
 	.hint {
 		font-size: 12px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		margin-top: 8px;
 	}
 </style>

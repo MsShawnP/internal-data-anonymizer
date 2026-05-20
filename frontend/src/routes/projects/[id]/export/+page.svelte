@@ -92,11 +92,11 @@
 	}
 	.back {
 		font-size: 13px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		text-decoration: none;
 	}
 	.back:hover {
-		color: #2a2a2a;
+		color: var(--ll-london-20);
 	}
 	h1 {
 		font-family: 'Playfair Display', Georgia, serif;
@@ -106,7 +106,7 @@
 	}
 	.subtitle {
 		font-size: 14px;
-		color: #6b6b6b;
+		color: var(--ll-london-35);
 		margin: 4px 0 0;
 	}
 	.format-picker {
@@ -125,18 +125,18 @@
 	}
 	.format-option {
 		padding: 8px 16px;
-		border: 1px solid #d8d4c8;
+		border: 1px solid var(--ll-london-85);
 		border-radius: 2px;
 		cursor: pointer;
 		font-size: 14px;
 		background: white;
 	}
 	.format-option:hover {
-		border-color: #1b3a5c;
+		border-color: var(--ll-chicago-20);
 	}
 	.format-option.selected {
-		border-color: #1b3a5c;
-		background: #f8f6f1;
+		border-color: var(--ll-chicago-20);
+		background: var(--ll-canvas);
 		font-weight: 600;
 	}
 	.format-option input {
@@ -144,7 +144,7 @@
 	}
 	.export-btn {
 		padding: 10px 24px;
-		background: #1b3a5c;
+		background: var(--ll-chicago-20);
 		color: white;
 		border: none;
 		border-radius: 2px;
@@ -154,14 +154,14 @@
 		cursor: pointer;
 	}
 	.export-btn:hover:not(:disabled) {
-		background: #14304b;
+		background: var(--ll-chicago-10);
 	}
 	.export-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
 	.status.error {
-		color: #c54b4b;
+		color: var(--ll-red-42);
 		font-size: 14px;
 		margin-top: 12px;
 	}
