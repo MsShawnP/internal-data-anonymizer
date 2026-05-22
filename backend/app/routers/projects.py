@@ -1,4 +1,5 @@
 import shutil
+import sqlite3
 import uuid
 from datetime import datetime, timezone
 
@@ -104,9 +105,9 @@ def _get_file_count(project_id: str) -> int:
     db_path = project_dir / "mappings.db"
     if not db_path.exists():
         return 0
-    try:
-        with project_db(project_id) as pdb:
+    with project_db(project_id) as pdb:
+        try:
             row = pdb.execute("SELECT COUNT(*) FROM files").fetchone()
             return row[0] if row else 0
-    except Exception:
-        return 0
+        except sqlite3.OperationalError:
+            return 0
