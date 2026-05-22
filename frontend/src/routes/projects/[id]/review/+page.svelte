@@ -98,7 +98,9 @@
 					if (res.ok) {
 						jitterResults = { ...jitterResults, [col.name]: await res.json() };
 					}
-				} catch {}
+				} catch (e) {
+					error = `Failed to generate jitter for ${col.name}`;
+				}
 				continue;
 			}
 			try {
@@ -136,7 +138,9 @@
 				m.original === original ? { ...m, anonymized: newValue } : m
 			);
 			columnMappings = { ...columnMappings, [currentMappingCol.name]: updated };
-		} catch {}
+		} catch (e) {
+			error = `Failed to update mapping for "${original}"`;
+		}
 	}
 
 	async function handleRegenerate() {

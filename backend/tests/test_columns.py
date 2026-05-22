@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from unittest.mock import patch
 
@@ -21,7 +22,6 @@ def mock_project(tmp_path):
     project_id = uuid.uuid4().hex[:12]
     file_id = uuid.uuid4().hex[:12]
 
-    # Mock the app.db connection for project existence check
     app_db = sqlite3.connect(":memory:", check_same_thread=False)
     app_db.row_factory = sqlite3.Row
     app_db.execute(
@@ -33,11 +33,10 @@ def mock_project(tmp_path):
     )
     app_db.commit()
 
-    # Create a project database with columns
     project_db_path = tmp_path / "mappings.db"
-    project_db = sqlite3.connect(str(project_db_path), check_same_thread=False)
-    project_db.row_factory = sqlite3.Row
-    project_db.execute("""
+    pdb = sqlite3.connect(str(project_db_path), check_same_thread=False)
+    pdb.row_factory = sqlite3.Row
+    pdb.execute("""
         CREATE TABLE columns (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             file_id TEXT NOT NULL,
@@ -47,7 +46,7 @@ def mock_project(tmp_path):
             profile_json TEXT
         )
     """)
-    project_db.execute("""
+    pdb.execute("""
         CREATE TABLE files (
             id TEXT PRIMARY KEY,
             filename TEXT NOT NULL,
@@ -56,7 +55,7 @@ def mock_project(tmp_path):
             column_count INTEGER
         )
     """)
-    project_db.execute(
+    pdb.execute(
         "INSERT INTO files VALUES (?, ?, ?, ?, ?)",
         (file_id, "test.csv", datetime.now(timezone.utc).isoformat(), 100, 3),
     )
@@ -84,12 +83,12 @@ def mock_project(tmp_path):
             "stats": {},
         })),
     ]
-    project_db.executemany(
+    pdb.executemany(
         "INSERT INTO columns (file_id, name, dtype, strategy, profile_json) VALUES (?, ?, ?, ?, ?)",
         columns_data,
     )
-    project_db.commit()
-    project_db.close()
+    pdb.commit()
+    pdb.close()
 
     return {
         "project_id": project_id,
@@ -99,21 +98,44 @@ def mock_project(tmp_path):
     }
 
 
+def _mock_project_db_factory(project_db_path):
+    @contextmanager
+    def mock_project_db(project_id):
+        conn = sqlite3.connect(str(project_db_path), check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        try:
+            yield conn
+        finally:
+            conn.close()
+    return mock_project_db
+
+
+def _patch_columns_router(mock_project):
+    """Patch at the point of use in the columns router."""
+    mock_get_conn = lambda: mock_project["app_db"]
+    mock_pdb = _mock_project_db_factory(mock_project["project_db_path"])
+    return (
+        patch("app.routers.columns.require_project"),
+        patch("app.routers.columns.project_db", mock_pdb),
+        patch("app.db.get_conn", mock_get_conn),
+    )
+
+
+def _patch_columns_router_no_project():
+    """Patch for nonexistent project (require_project raises 404)."""
+    from fastapi import HTTPException
+    def raise_404(project_id):
+        raise HTTPException(status_code=404, detail="Project not found")
+    return (patch("app.routers.columns.require_project", raise_404),)
+
+
 class TestUpdateColumnStrategy:
     def test_valid_strategy_update(self, client, mock_project):
         pid = mock_project["project_id"]
         fid = mock_project["file_id"]
 
-        def mock_get_conn():
-            return mock_project["app_db"]
-
-        def mock_get_project_db(project_id):
-            conn = sqlite3.connect(str(mock_project["project_db_path"]), check_same_thread=False)
-            conn.row_factory = sqlite3.Row
-            return conn
-
-        with patch("app.routers.columns.get_conn", mock_get_conn), \
-             patch("app.routers.columns.get_project_db", mock_get_project_db):
+        p1, p2, p3 = _patch_columns_router(mock_project)
+        with p1, p2, p3:
             resp = client.put(
                 f"/api/projects/{pid}/files/{fid}/columns/email/strategy",
                 json={"strategy": "hash"},
@@ -129,16 +151,8 @@ class TestUpdateColumnStrategy:
         pid = mock_project["project_id"]
         fid = mock_project["file_id"]
 
-        def mock_get_conn():
-            return mock_project["app_db"]
-
-        def mock_get_project_db(project_id):
-            conn = sqlite3.connect(str(mock_project["project_db_path"]), check_same_thread=False)
-            conn.row_factory = sqlite3.Row
-            return conn
-
-        with patch("app.routers.columns.get_conn", mock_get_conn), \
-             patch("app.routers.columns.get_project_db", mock_get_project_db):
+        p1, p2, p3 = _patch_columns_router(mock_project)
+        with p1, p2, p3:
             resp = client.put(
                 f"/api/projects/{pid}/files/{fid}/columns/email/strategy",
                 json={"strategy": "invalid_strategy"},
@@ -148,14 +162,8 @@ class TestUpdateColumnStrategy:
         assert "Invalid strategy" in resp.json()["detail"]
 
     def test_nonexistent_project_returns_404(self, client):
-        def mock_get_conn():
-            conn = sqlite3.connect(":memory:", check_same_thread=False)
-            conn.row_factory = sqlite3.Row
-            conn.execute("CREATE TABLE projects (id TEXT PRIMARY KEY, name TEXT, created_at TEXT)")
-            conn.commit()
-            return conn
-
-        with patch("app.routers.columns.get_conn", mock_get_conn):
+        (p1,) = _patch_columns_router_no_project()
+        with p1:
             resp = client.put(
                 "/api/projects/nonexistent123/files/abc/columns/col/strategy",
                 json={"strategy": "fake"},
@@ -168,16 +176,8 @@ class TestUpdateColumnStrategy:
         pid = mock_project["project_id"]
         fid = mock_project["file_id"]
 
-        def mock_get_conn():
-            return mock_project["app_db"]
-
-        def mock_get_project_db(project_id):
-            conn = sqlite3.connect(str(mock_project["project_db_path"]), check_same_thread=False)
-            conn.row_factory = sqlite3.Row
-            return conn
-
-        with patch("app.routers.columns.get_conn", mock_get_conn), \
-             patch("app.routers.columns.get_project_db", mock_get_project_db):
+        p1, p2, p3 = _patch_columns_router(mock_project)
+        with p1, p2, p3:
             resp = client.put(
                 f"/api/projects/{pid}/files/{fid}/columns/nonexistent_col/strategy",
                 json={"strategy": "fake"},
@@ -191,17 +191,9 @@ class TestUpdateColumnStrategy:
         fid = mock_project["file_id"]
         valid_strategies = ["fake", "jitter", "format-preserve", "hash", "drop", "passthrough"]
 
-        def mock_get_conn():
-            return mock_project["app_db"]
-
-        def mock_get_project_db(project_id):
-            conn = sqlite3.connect(str(mock_project["project_db_path"]), check_same_thread=False)
-            conn.row_factory = sqlite3.Row
-            return conn
-
         for strategy in valid_strategies:
-            with patch("app.routers.columns.get_conn", mock_get_conn), \
-                 patch("app.routers.columns.get_project_db", mock_get_project_db):
+            p1, p2, p3 = _patch_columns_router(mock_project)
+            with p1, p2, p3:
                 resp = client.put(
                     f"/api/projects/{pid}/files/{fid}/columns/email/strategy",
                     json={"strategy": strategy},
@@ -214,16 +206,8 @@ class TestListColumns:
         pid = mock_project["project_id"]
         fid = mock_project["file_id"]
 
-        def mock_get_conn():
-            return mock_project["app_db"]
-
-        def mock_get_project_db(project_id):
-            conn = sqlite3.connect(str(mock_project["project_db_path"]), check_same_thread=False)
-            conn.row_factory = sqlite3.Row
-            return conn
-
-        with patch("app.routers.columns.get_conn", mock_get_conn), \
-             patch("app.routers.columns.get_project_db", mock_get_project_db):
+        p1, p2, p3 = _patch_columns_router(mock_project)
+        with p1, p2, p3:
             resp = client.get(f"/api/projects/{pid}/files/{fid}/columns")
 
         assert resp.status_code == 200
@@ -240,14 +224,8 @@ class TestListColumns:
         assert len(email_col["sample_values"]) == 3
 
     def test_list_columns_nonexistent_project(self, client):
-        def mock_get_conn():
-            conn = sqlite3.connect(":memory:", check_same_thread=False)
-            conn.row_factory = sqlite3.Row
-            conn.execute("CREATE TABLE projects (id TEXT PRIMARY KEY, name TEXT, created_at TEXT)")
-            conn.commit()
-            return conn
-
-        with patch("app.routers.columns.get_conn", mock_get_conn):
+        (p1,) = _patch_columns_router_no_project()
+        with p1:
             resp = client.get("/api/projects/nonexistent123/files/abc/columns")
 
         assert resp.status_code == 404

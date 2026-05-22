@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
+	import { formatDate } from '$lib/utils';
 
 	interface FileRecord {
 		id: string;
@@ -23,12 +24,6 @@
 			loading = false;
 		}
 	});
-
-	function formatDate(iso: string): string {
-		return new Date(iso).toLocaleDateString('en-US', {
-			month: 'short', day: 'numeric', year: 'numeric'
-		});
-	}
 </script>
 
 <div class="project-view">

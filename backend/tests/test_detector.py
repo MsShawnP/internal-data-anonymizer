@@ -1,7 +1,8 @@
 import pandas as pd
 import pytest
 
-from app.services.detector import _classify_column, _is_upc_valid, profile_columns
+from app.services.detector import _classify_column, profile_columns
+from app.services.fakers.identifiers import _is_valid_upc as _is_upc_valid
 
 
 class TestUPCValidation:

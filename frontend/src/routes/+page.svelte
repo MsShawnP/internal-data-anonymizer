@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { projectStore } from '$lib/stores/projects.svelte';
+	import { formatDate } from '$lib/utils';
 
 	let newName = $state('');
 	let creating = $state(false);
@@ -23,14 +24,6 @@
 	async function handleDelete(id: string, name: string) {
 		if (!confirm(`Delete project "${name}"? This cannot be undone.`)) return;
 		await projectStore.remove(id);
-	}
-
-	function formatDate(iso: string): string {
-		return new Date(iso).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
 	}
 </script>
 

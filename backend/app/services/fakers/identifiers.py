@@ -13,12 +13,15 @@ def _compute_upc_check_digit(digits_11: list[int]) -> int:
 
 
 def _is_valid_upc(code: str) -> bool:
-    """Validate a 12-digit UPC-A code."""
-    if len(code) != 12 or not code.isdigit():
+    """Validate a 12-digit UPC-A or 13-digit EAN-13 code."""
+    if not code.isdigit() or len(code) not in (12, 13):
         return False
     digits = [int(d) for d in code]
-    expected = _compute_upc_check_digit(digits[:11])
-    return digits[11] == expected
+    if len(code) == 12:
+        total = sum(d * (3 if i % 2 == 0 else 1) for i, d in enumerate(digits[:-1]))
+    else:
+        total = sum(d * (1 if i % 2 == 0 else 3) for i, d in enumerate(digits[:-1]))
+    return (10 - total % 10) % 10 == digits[-1]
 
 
 class UPCProvider(BaseProvider):

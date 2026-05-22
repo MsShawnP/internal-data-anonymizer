@@ -1,11 +1,10 @@
 """Tests for U10: Multi-file mapping reuse."""
 
 import io
-import json
 import sqlite3
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timezone
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -36,9 +35,9 @@ def project_with_mappings(tmp_path):
     app_db.commit()
 
     project_db_path = tmp_path / "mappings.db"
-    project_db = sqlite3.connect(str(project_db_path), check_same_thread=False)
-    project_db.row_factory = sqlite3.Row
-    project_db.execute("""
+    pdb = sqlite3.connect(str(project_db_path), check_same_thread=False)
+    pdb.row_factory = sqlite3.Row
+    pdb.execute("""
         CREATE TABLE columns (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             file_id TEXT NOT NULL,
@@ -48,7 +47,7 @@ def project_with_mappings(tmp_path):
             profile_json TEXT
         )
     """)
-    project_db.execute("""
+    pdb.execute("""
         CREATE TABLE files (
             id TEXT PRIMARY KEY,
             filename TEXT NOT NULL,
@@ -57,7 +56,7 @@ def project_with_mappings(tmp_path):
             column_count INTEGER
         )
     """)
-    project_db.execute("""
+    pdb.execute("""
         CREATE TABLE mappings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             column_name TEXT NOT NULL,
@@ -67,21 +66,20 @@ def project_with_mappings(tmp_path):
             UNIQUE(column_name, original)
         )
     """)
-    # Pre-existing mappings from "File A"
-    project_db.execute(
+    pdb.execute(
         "INSERT INTO mappings (column_name, original, anonymized, file_name) VALUES (?, ?, ?, ?)",
         ("store_name", "Costco", "FakeStore Alpha", "file_a.csv"),
     )
-    project_db.execute(
+    pdb.execute(
         "INSERT INTO mappings (column_name, original, anonymized, file_name) VALUES (?, ?, ?, ?)",
         ("store_name", "Walmart", "FakeStore Beta", "file_a.csv"),
     )
-    project_db.execute(
+    pdb.execute(
         "INSERT INTO mappings (column_name, original, anonymized, file_name) VALUES (?, ?, ?, ?)",
         ("store_name", "Target", "FakeStore Gamma", "file_a.csv"),
     )
-    project_db.commit()
-    project_db.close()
+    pdb.commit()
+    pdb.close()
 
     return {
         "project_id": project_id,
@@ -89,6 +87,23 @@ def project_with_mappings(tmp_path):
         "project_db_path": project_db_path,
         "tmp_path": tmp_path,
     }
+
+
+def _patch_upload_router(ctx):
+    """Patch at the point of use in the upload router."""
+    @contextmanager
+    def mock_project_db(project_id):
+        conn = sqlite3.connect(str(ctx["project_db_path"]), check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        try:
+            yield conn
+        finally:
+            conn.close()
+
+    return (
+        patch("app.routers.upload.require_project"),
+        patch("app.routers.upload.project_db", mock_project_db),
+    )
 
 
 class TestMultiFileReuse:
@@ -99,15 +114,10 @@ class TestMultiFileReuse:
         ctx = project_with_mappings
         csv_content = "store_name,amount\nCostco,100\nWalmart,200\nTarget,300\n"
 
-        with patch("app.routers.upload.get_conn") as mock_conn, \
-             patch("app.routers.upload.get_project_db") as mock_pdb:
-            mock_conn.return_value = ctx["app_db"]
-            pdb = sqlite3.connect(str(ctx["project_db_path"]), check_same_thread=False)
-            pdb.row_factory = sqlite3.Row
-            mock_pdb.return_value = pdb
-
-            upload_dir = Path(__file__).resolve().parent.parent / "uploads"
-            upload_dir.mkdir(parents=True, exist_ok=True)
+        p1, p2 = _patch_upload_router(ctx)
+        with p1, p2:
+            from app.db import UPLOAD_DIR
+            UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
             res = client.post(
                 f"/api/projects/{ctx['project_id']}/upload",
@@ -124,15 +134,10 @@ class TestMultiFileReuse:
         ctx = project_with_mappings
         csv_content = "store_name,amount\nCostco,100\nWalmart,200\nNewStore,300\n"
 
-        with patch("app.routers.upload.get_conn") as mock_conn, \
-             patch("app.routers.upload.get_project_db") as mock_pdb:
-            mock_conn.return_value = ctx["app_db"]
-            pdb = sqlite3.connect(str(ctx["project_db_path"]), check_same_thread=False)
-            pdb.row_factory = sqlite3.Row
-            mock_pdb.return_value = pdb
-
-            upload_dir = Path(__file__).resolve().parent.parent / "uploads"
-            upload_dir.mkdir(parents=True, exist_ok=True)
+        p1, p2 = _patch_upload_router(ctx)
+        with p1, p2:
+            from app.db import UPLOAD_DIR
+            UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
             res = client.post(
                 f"/api/projects/{ctx['project_id']}/upload",
@@ -150,15 +155,10 @@ class TestMultiFileReuse:
         ctx = project_with_mappings
         csv_content = "city,amount\nNew York,100\nChicago,200\n"
 
-        with patch("app.routers.upload.get_conn") as mock_conn, \
-             patch("app.routers.upload.get_project_db") as mock_pdb:
-            mock_conn.return_value = ctx["app_db"]
-            pdb = sqlite3.connect(str(ctx["project_db_path"]), check_same_thread=False)
-            pdb.row_factory = sqlite3.Row
-            mock_pdb.return_value = pdb
-
-            upload_dir = Path(__file__).resolve().parent.parent / "uploads"
-            upload_dir.mkdir(parents=True, exist_ok=True)
+        p1, p2 = _patch_upload_router(ctx)
+        with p1, p2:
+            from app.db import UPLOAD_DIR
+            UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
             res = client.post(
                 f"/api/projects/{ctx['project_id']}/upload",
@@ -167,6 +167,5 @@ class TestMultiFileReuse:
 
         assert res.status_code == 200
         data = res.json()
-        # city column is new, should not appear in reuse_summary
         assert "city" not in data["reuse_summary"]
         assert data["all_values_mapped"] is False

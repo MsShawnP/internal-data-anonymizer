@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 
-from ..db import DATA_DIR, get_conn, get_project_db
+from ..db import DATA_DIR, get_conn, project_db, require_project
 from ..schemas import ProjectCreate, ProjectResponse
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
@@ -43,38 +43,37 @@ async def create_project(body: ProjectCreate):
     )
     conn.commit()
 
-    project_db = get_project_db(project_id)
-    project_db.execute("""
-        CREATE TABLE IF NOT EXISTS columns (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            file_id TEXT NOT NULL,
-            name TEXT NOT NULL,
-            dtype TEXT,
-            strategy TEXT,
-            profile_json TEXT
-        )
-    """)
-    project_db.execute("""
-        CREATE TABLE IF NOT EXISTS mappings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            column_name TEXT NOT NULL,
-            original TEXT NOT NULL,
-            anonymized TEXT NOT NULL,
-            file_name TEXT,
-            UNIQUE(column_name, original)
-        )
-    """)
-    project_db.execute("""
-        CREATE TABLE IF NOT EXISTS files (
-            id TEXT PRIMARY KEY,
-            filename TEXT NOT NULL,
-            uploaded_at TEXT NOT NULL,
-            row_count INTEGER,
-            column_count INTEGER
-        )
-    """)
-    project_db.commit()
-    project_db.close()
+    with project_db(project_id) as pdb:
+        pdb.execute("""
+            CREATE TABLE IF NOT EXISTS columns (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                dtype TEXT,
+                strategy TEXT,
+                profile_json TEXT
+            )
+        """)
+        pdb.execute("""
+            CREATE TABLE IF NOT EXISTS mappings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                column_name TEXT NOT NULL,
+                original TEXT NOT NULL,
+                anonymized TEXT NOT NULL,
+                file_name TEXT,
+                UNIQUE(column_name, original)
+            )
+        """)
+        pdb.execute("""
+            CREATE TABLE IF NOT EXISTS files (
+                id TEXT PRIMARY KEY,
+                filename TEXT NOT NULL,
+                uploaded_at TEXT NOT NULL,
+                row_count INTEGER,
+                column_count INTEGER
+            )
+        """)
+        pdb.commit()
 
     return ProjectResponse(
         id=project_id, name=body.name, created_at=created_at, file_count=0
@@ -106,10 +105,8 @@ def _get_file_count(project_id: str) -> int:
     if not db_path.exists():
         return 0
     try:
-        project_db = get_project_db(project_id)
-        row = project_db.execute("SELECT COUNT(*) FROM files").fetchone()
-        count = row[0] if row else 0
-        project_db.close()
-        return count
+        with project_db(project_id) as pdb:
+            row = pdb.execute("SELECT COUNT(*) FROM files").fetchone()
+            return row[0] if row else 0
     except Exception:
         return 0

@@ -16,32 +16,16 @@ class ColumnProfile:
     stats: dict = field(default_factory=dict)
 
 
+from .fakers.identifiers import _is_valid_upc
+
 THRESHOLD = 0.80
 
 EMAIL_RE = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 PHONE_RE = re.compile(
     r"^[\+]?[(]?\d{1,3}[)]?[-\s.]\d{3}[-\s.]\d{4}$"
 )
-DATE_FORMATS = [
-    r"^\d{4}-\d{2}-\d{2}",
-    r"^\d{1,2}/\d{1,2}/\d{2,4}",
-    r"^\d{1,2}-\d{1,2}-\d{2,4}",
-]
 SKU_RE = re.compile(r"^[A-Za-z]{1,5}[-_][A-Za-z0-9]{1,8}([-_][A-Za-z0-9]{1,5})?$")
-
-
-def _is_upc_valid(code: str) -> bool:
-    if not code.isdigit() or len(code) not in (12, 13):
-        return False
-    digits = [int(d) for d in code]
-    check = digits[-1]
-    if len(code) == 12:
-        # UPC-A: positions 0,2,4... weight 3; positions 1,3,5... weight 1
-        total = sum(d * (3 if i % 2 == 0 else 1) for i, d in enumerate(digits[:-1]))
-    else:
-        # EAN-13: positions 0,2,4... weight 1; positions 1,3,5... weight 3
-        total = sum(d * (1 if i % 2 == 0 else 3) for i, d in enumerate(digits[:-1]))
-    return (10 - total % 10) % 10 == check
+NAME_RE = re.compile(r"^[A-Za-z\s\.\'\-]+$")
 
 
 def _classify_column(series: pd.Series) -> tuple[str, str]:
@@ -65,9 +49,7 @@ def _classify_column(series: pd.Series) -> tuple[str, str]:
     # UPC/GTIN check (12 or 13 digit numbers with check digit validation)
     digit_only = non_null.apply(lambda v: v.strip().isdigit() and len(v.strip()) in (12, 13))
     if digit_only.sum() / total >= THRESHOLD:
-        valid_checks = non_null.apply(lambda v: _is_upc_valid(v.strip())).sum()
-        # If >10% pass check digit validation, it's likely UPC data (random 12-digit
-        # numbers have only 10% chance of valid check digit)
+        valid_checks = non_null.apply(lambda v: _is_valid_upc(v.strip())).sum()
         if valid_checks / total > 0.10:
             return "upc_gtin", "format-preserve"
 
@@ -90,8 +72,7 @@ def _classify_column(series: pd.Series) -> tuple[str, str]:
         return "numeric", "jitter"
 
     # Name-like check (no digits, mostly titlecase/words)
-    name_pattern = re.compile(r"^[A-Za-z\s\.\'\-]+$")
-    name_matches = non_null.apply(lambda v: bool(name_pattern.match(v.strip()))).sum()
+    name_matches = non_null.apply(lambda v: bool(NAME_RE.match(v.strip()))).sum()
     if name_matches / total >= THRESHOLD:
         return "name", "fake"
 

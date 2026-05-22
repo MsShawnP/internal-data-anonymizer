@@ -73,16 +73,6 @@ export function updateColumnStrategy(
 	});
 }
 
-export function generateColumnMappings(
-	projectId: string,
-	fileId: string,
-	colName: string
-): Promise<{ column: string; strategy: string; mappings: { original: string; anonymized: string }[] }> {
-	return request(`/projects/${projectId}/files/${fileId}/columns/${colName}/generate`, {
-		method: 'POST'
-	});
-}
-
 export function exportFile(
 	projectId: string,
 	fileId: string,
