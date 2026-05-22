@@ -81,8 +81,8 @@ def _classify_column(series: pd.Series) -> tuple[str, str]:
 
 def _infer_dtype(series: pd.Series, detected_type: str) -> str:
     if detected_type == "numeric":
-        numeric = pd.to_numeric(series.dropna(), errors="coerce")
-        if numeric.notna().any():
+        numeric = pd.to_numeric(series.dropna(), errors="coerce").dropna()
+        if len(numeric) > 0:
             if (numeric == numeric.astype(int)).all():
                 return "int64"
             return "float64"
@@ -111,12 +111,15 @@ def profile_columns(df: pd.DataFrame) -> list[ColumnProfile]:
                     "max": float(numeric.max()),
                 }
 
+        empty_or_null = series.isna() | (series.astype(str).str.strip() == "")
+        null_rate = round(float(empty_or_null.mean()), 4)
+
         profiles.append(
             ColumnProfile(
                 name=col,
                 dtype=_infer_dtype(series, detected_type),
                 unique_count=int(non_null.nunique()),
-                null_rate=round(float(series.isna().mean()), 4),
+                null_rate=null_rate,
                 sample_values=sample,
                 suggested_strategy=strategy,
                 detected_type=detected_type,

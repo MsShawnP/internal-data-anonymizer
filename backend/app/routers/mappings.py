@@ -59,8 +59,9 @@ async def generate_column_mappings(project_id: str, file_id: str, col_name: str)
         file_path = get_upload_path(pdb, file_id)
         file_row = pdb.execute("SELECT filename FROM files WHERE id = ?", (file_id,)).fetchone()
 
-        df = read_file(file_path)
-        if col_name not in df.columns:
+        try:
+            df = read_file(file_path, columns=[col_name])
+        except (ValueError, KeyError):
             raise HTTPException(status_code=404, detail=f"Column '{col_name}' not in file")
 
         unique_values = df[col_name].dropna().astype(str).unique().tolist()
@@ -116,9 +117,10 @@ async def reverse_lookup(project_id: str, q: str = ""):
         return []
 
     with project_db(project_id) as pdb:
+        escaped_q = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         rows = pdb.execute(
-            "SELECT column_name, original, anonymized, file_name FROM mappings WHERE anonymized LIKE ?",
-            (f"%{q.strip()}%",),
+            "SELECT column_name, original, anonymized, file_name FROM mappings WHERE anonymized LIKE ? ESCAPE '\\'",
+            (f"%{escaped_q}%",),
         ).fetchall()
 
     return [

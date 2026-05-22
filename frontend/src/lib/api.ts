@@ -84,3 +84,52 @@ export function exportFile(
 			return res.blob();
 		});
 }
+
+export interface MappingEntry {
+	original: string;
+	anonymized: string;
+}
+
+export interface GenerateMappingsResponse {
+	column: string;
+	strategy: string;
+	mappings: MappingEntry[];
+}
+
+export function generateColumnMappings(
+	projectId: string,
+	fileId: string,
+	colName: string,
+	pattern?: string
+): Promise<GenerateMappingsResponse> {
+	const options: RequestInit = { method: 'POST' };
+	if (pattern) {
+		options.headers = { 'Content-Type': 'application/json' };
+		options.body = JSON.stringify({ pattern });
+	}
+	return request(`/projects/${projectId}/files/${fileId}/columns/${colName}/generate`, options);
+}
+
+export function generateJitter(
+	projectId: string,
+	fileId: string,
+	colName: string,
+	alpha: number = 0.05
+): Promise<Record<string, unknown>> {
+	return request(`/projects/${projectId}/files/${fileId}/columns/${colName}/jitter`, {
+		method: 'POST',
+		body: JSON.stringify({ alpha })
+	});
+}
+
+export function updateMapping(
+	projectId: string,
+	colName: string,
+	originalValue: string,
+	anonymized: string
+): Promise<{ status: string }> {
+	return request(`/projects/${projectId}/mappings/${colName}/${encodeURIComponent(originalValue)}`, {
+		method: 'PUT',
+		body: JSON.stringify({ anonymized })
+	});
+}

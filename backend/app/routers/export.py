@@ -1,8 +1,12 @@
+import hashlib
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
 from ..db import DATA_DIR, get_upload_path, load_mappings_by_column, project_db, require_project
 from ..services.applier import apply_mappings, export_dataframe
+from ..services.ingest import read_file
+from ..services.jitter import apply_jitter
 
 router = APIRouter(prefix="/api/projects/{project_id}", tags=["export"])
 
@@ -35,9 +39,20 @@ async def _do_export(project_id: str, file_id: str, fmt: str = "csv"):
         ).fetchall()
         column_strategies = {row["name"]: row["strategy"] for row in col_rows}
 
-        column_mappings = load_mappings_by_column(pdb)
+        file_columns = [row["name"] for row in col_rows]
+        column_mappings = load_mappings_by_column(pdb, file_columns)
 
-    df = apply_mappings(file_path, column_mappings, column_strategies)
+    jitter_results = {}
+    jitter_cols = [c for c, s in column_strategies.items() if s == "jitter"]
+    if jitter_cols:
+        df_orig = read_file(file_path)
+        seed_int = int(hashlib.sha256(project_id.encode()).hexdigest(), 16) % (2**31)
+        for col in jitter_cols:
+            if col in df_orig.columns:
+                jittered, _ = apply_jitter(df_orig[col], seed=seed_int)
+                jitter_results[col] = jittered
+
+    df = apply_mappings(file_path, column_mappings, column_strategies, jitter_results)
 
     output_dir = DATA_DIR / "projects" / project_id / "exports"
     output_path = export_dataframe(df, output_dir, fmt)

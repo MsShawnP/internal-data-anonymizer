@@ -1,3 +1,4 @@
+import asyncio
 import json
 import uuid
 from datetime import datetime, timezone
@@ -61,7 +62,7 @@ async def upload_file(project_id: str, file: UploadFile):
         save_path.unlink(missing_ok=True)
         raise HTTPException(status_code=400, detail=f"Failed to parse file: {e}")
 
-    profiles = profile_columns(df)
+    profiles = await asyncio.to_thread(profile_columns, df)
 
     with project_db(project_id) as pdb:
         pdb.execute(

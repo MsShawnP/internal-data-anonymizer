@@ -82,11 +82,53 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 
 ---
 
+## Current Arc: Improvement pass (2026-05-22)
+
+**Goal:** Fix correctness bugs, strengthen anonymization, and improve code quality across all 11 findings from the /improve audit.
+
+**Why this arc, why now:** User lost track of the project and wants confidence it works correctly. Audit found 2 critical bugs (jitter export leaks real data, dtype inference crash), plus anonymization weaknesses and code quality issues.
+
+**Tasks:**
+- [x] 1. Fix jitter export — compute jitter at export time so jitter-strategy columns actually get anonymized
+- [x] 2. Fix `_infer_dtype` crash on mixed-type numeric columns (NaN → int cast)
+- [x] 3. Include column name in hash input to prevent cross-column matching
+- [x] 4. Fix null_rate always 0.0 for CSV/XLSX (keep_default_na=False masks blanks)
+- [x] 5. Protect integer jitter from rank-breaking ties after rounding
+- [x] 6. Escape LIKE wildcards in reverse lookup
+- [x] 7. Use usecols in read_file when only one column needed
+- [x] 8. Wrap profile_columns in asyncio.to_thread
+- [x] 9. Filter mappings to file's columns at export
+- [x] 10. Replace raw fetch() calls in review page with api.ts client
+- [x] 11. Document npm audit deferrals (no code change, just tracking)
+
+**Out of scope:** npm major version upgrades (SvelteKit/Vite), new features
+
+**Definition of done:** All 81+ tests pass, each fix verified, no regressions
+
+---
+
 ## Arc history
 
 When an arc completes, archive its goal, completion date, and outcome
 here. Then start a new arc above. Provides continuity without bloating
 the active plan.
+
+### 2026-05-22 — Improvement pass
+- **Trigger:** User-initiated (`/improve`) — lost track of project, wanted confidence it works correctly
+- **What was reviewed:** Full audit: code quality, security, correctness, tests, dependencies, workflow files
+- **What was fixed:**
+  - CRITICAL: Jitter columns now actually anonymized at export (were silently passing through real data)
+  - CRITICAL: `_infer_dtype` no longer crashes on mixed-type numeric columns
+  - Hash strategy now includes column name in hash input (prevents cross-column value matching)
+  - null_rate now correctly counts empty strings as nulls for CSV/XLSX files
+  - Integer jitter resolves ties after rounding to preserve rank order
+  - Reverse lookup escapes LIKE wildcards (%, _)
+  - read_file supports usecols for targeted column reads
+  - profile_columns runs in asyncio.to_thread (no longer blocks event loop)
+  - Export filters mappings to only the file's columns
+  - Review page uses shared api.ts client instead of raw fetch()
+- **Deferred:** 7 npm vulnerabilities requiring SvelteKit/Vite major version upgrades (low/moderate severity, dev-server only, local tool)
+- **Next review:** 2026-06-22
 
 ### 2026-05-16 — v1 shipped
 - **Goal:** Build a web-based data anonymization tool with deterministic mappings, format-preserving fakes, and reverse lookup.

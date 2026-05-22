@@ -49,6 +49,12 @@ def apply_jitter(
     # Match original precision (integer columns stay integer)
     if pd.api.types.is_integer_dtype(series.dropna()):
         rank_preserved = np.round(rank_preserved).astype(int)
+        # Resolve ties that rounding introduced — nudge duplicates to preserve rank
+        rank_order = np.argsort(original_ranks)
+        for j in range(1, len(rank_order)):
+            curr, prev = rank_order[j], rank_order[j - 1]
+            if rank_preserved[curr] <= rank_preserved[prev]:
+                rank_preserved[curr] = rank_preserved[prev] + 1
     else:
         max_decimals = _detect_precision(non_null)
         rank_preserved = np.round(rank_preserved, max_decimals)

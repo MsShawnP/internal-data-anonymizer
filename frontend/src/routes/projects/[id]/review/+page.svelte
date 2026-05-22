@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { listColumns, updateColumnStrategy, type ColumnProfile, type Strategy } from '$lib/api';
+	import { listColumns, updateColumnStrategy, generateColumnMappings, generateJitter, updateMapping, type ColumnProfile, type Strategy } from '$lib/api';
 	import ColumnCard from '$lib/components/ColumnCard.svelte';
 	import MappingTable from '$lib/components/MappingTable.svelte';
 	import PatternRuleEditor from '$lib/components/PatternRuleEditor.svelte';
@@ -90,33 +90,18 @@
 			const strategy = confirmedStrategies[col.name];
 			if (strategy === 'jitter') {
 				try {
-					const res = await fetch(`/api/projects/${projectId}/files/${fileId}/columns/${col.name}/jitter`, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ alpha: 0.05 })
-					});
-					if (res.ok) {
-						jitterResults = { ...jitterResults, [col.name]: await res.json() };
-					}
+					const data = await generateJitter(projectId, fileId, col.name);
+					jitterResults = { ...jitterResults, [col.name]: data as typeof jitterResults[string] };
 				} catch (e) {
 					error = `Failed to generate jitter for ${col.name}`;
 				}
 				continue;
 			}
 			try {
-				const res = await fetch(`/api/projects/${projectId}/files/${fileId}/columns/${col.name}/generate`, {
-					method: 'POST'
-				});
-				if (res.ok) {
-					const data = await res.json();
-					columnMappings = { ...columnMappings, [col.name]: data.mappings };
-				} else {
-					error = `Failed to generate mappings for ${col.name}`;
-					generating = false;
-					return;
-				}
+				const data = await generateColumnMappings(projectId, fileId, col.name);
+				columnMappings = { ...columnMappings, [col.name]: data.mappings };
 			} catch (e) {
-				error = `Network error generating mappings for ${col.name}`;
+				error = e instanceof Error ? e.message : `Failed to generate mappings for ${col.name}`;
 				generating = false;
 				return;
 			}
@@ -129,11 +114,7 @@
 	async function handleMappingEdit(original: string, newValue: string) {
 		if (!currentMappingCol) return;
 		try {
-			await fetch(`/api/projects/${projectId}/mappings/${currentMappingCol.name}/${encodeURIComponent(original)}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ anonymized: newValue })
-			});
+			await updateMapping(projectId, currentMappingCol.name, original, newValue);
 			const updated = columnMappings[currentMappingCol.name].map(m =>
 				m.original === original ? { ...m, anonymized: newValue } : m
 			);
@@ -147,13 +128,10 @@
 		if (!fileId || !currentMappingCol) return;
 		generating = true;
 		try {
-			const res = await fetch(`/api/projects/${projectId}/files/${fileId}/columns/${currentMappingCol.name}/generate`, {
-				method: 'POST'
-			});
-			if (res.ok) {
-				const data = await res.json();
-				columnMappings = { ...columnMappings, [currentMappingCol.name]: data.mappings };
-			}
+			const data = await generateColumnMappings(projectId, fileId, currentMappingCol.name);
+			columnMappings = { ...columnMappings, [currentMappingCol.name]: data.mappings };
+		} catch (e) {
+			error = e instanceof Error ? e.message : `Failed to regenerate mappings`;
 		} finally {
 			generating = false;
 		}
@@ -177,15 +155,10 @@
 		if (!fileId || !currentMappingCol) return;
 		generating = true;
 		try {
-			const res = await fetch(`/api/projects/${projectId}/files/${fileId}/columns/${currentMappingCol.name}/generate`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ pattern })
-			});
-			if (res.ok) {
-				const data = await res.json();
-				columnMappings = { ...columnMappings, [currentMappingCol.name]: data.mappings };
-			}
+			const data = await generateColumnMappings(projectId, fileId, currentMappingCol.name, pattern);
+			columnMappings = { ...columnMappings, [currentMappingCol.name]: data.mappings };
+		} catch (e) {
+			error = e instanceof Error ? e.message : `Failed to apply pattern`;
 		} finally {
 			generating = false;
 		}

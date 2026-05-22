@@ -65,10 +65,19 @@ def project_db(project_id: str):
         conn.close()
 
 
-def load_mappings_by_column(conn: sqlite3.Connection) -> dict[str, dict[str, str]]:
-    rows = conn.execute(
-        "SELECT column_name, original, anonymized FROM mappings ORDER BY column_name, original"
-    ).fetchall()
+def load_mappings_by_column(
+    conn: sqlite3.Connection, columns: list[str] | None = None
+) -> dict[str, dict[str, str]]:
+    if columns:
+        placeholders = ",".join("?" for _ in columns)
+        rows = conn.execute(
+            f"SELECT column_name, original, anonymized FROM mappings WHERE column_name IN ({placeholders}) ORDER BY column_name, original",
+            columns,
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT column_name, original, anonymized FROM mappings ORDER BY column_name, original"
+        ).fetchall()
     result: dict[str, dict[str, str]] = {}
     for row in rows:
         col = row["column_name"]

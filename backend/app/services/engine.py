@@ -89,7 +89,7 @@ def generate_mappings(
 
         if strategy == "hash":
             mappings[value] = hashlib.sha256(
-                (project_salt + value).encode()
+                (project_salt + column_name + value).encode()
             ).hexdigest()[:12]
         elif strategy == "fake":
             mappings[value] = _generate_fake(fake, value, detected_type)
