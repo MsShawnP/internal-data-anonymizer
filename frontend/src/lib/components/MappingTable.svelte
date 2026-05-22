@@ -55,13 +55,14 @@
 						<button class="cancel-btn" onclick={cancelEdit}>✕</button>
 					</span>
 				{:else}
-					<span
+					<button
+						type="button"
 						class="col-anonymized clickable"
 						onclick={() => startEdit(mapping.original, mapping.anonymized)}
 						title="Click to edit"
 					>
 						{mapping.anonymized}
-					</span>
+					</button>
 				{/if}
 			</div>
 		{/each}
@@ -119,6 +120,10 @@
 		cursor: pointer;
 		padding: 2px 4px;
 		border-radius: 2px;
+		border: none;
+		background: none;
+		font: inherit;
+		text-align: left;
 	}
 	.clickable:hover {
 		background: var(--ll-london-90);

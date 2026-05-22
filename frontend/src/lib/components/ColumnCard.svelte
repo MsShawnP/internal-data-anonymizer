@@ -9,7 +9,7 @@
 		onconfirm: (strategy: Strategy) => void;
 	} = $props();
 
-	let selectedStrategy = $state<Strategy>(column.strategy as Strategy);
+	let selectedStrategy = $state<Strategy>('fake');
 
 	$effect(() => {
 		selectedStrategy = column.strategy as Strategy;

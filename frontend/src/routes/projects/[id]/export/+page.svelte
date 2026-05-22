@@ -54,8 +54,8 @@
 	{#if !fileId}
 		<p class="status error">No file specified. Complete the review flow first.</p>
 	{:else}
-		<div class="format-picker">
-			<label class="format-label">Output format</label>
+		<fieldset class="format-picker">
+			<legend class="format-label">Output format</legend>
 			<div class="format-options">
 				{#each FORMATS as fmt}
 					<label class="format-option" class:selected={format === fmt.value}>
@@ -69,7 +69,7 @@
 					</label>
 				{/each}
 			</div>
-		</div>
+		</fieldset>
 
 		<button class="export-btn" onclick={handleExport} disabled={exporting}>
 			{exporting ? 'Exporting...' : 'Download'}
@@ -111,12 +111,15 @@
 	}
 	.format-picker {
 		margin-bottom: 24px;
+		border: none;
+		padding: 0;
 	}
 	.format-label {
 		display: block;
 		font-size: 14px;
 		font-weight: 600;
 		margin-bottom: 8px;
+		padding: 0;
 	}
 	.format-options {
 		display: flex;
