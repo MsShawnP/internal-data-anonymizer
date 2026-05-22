@@ -43,6 +43,12 @@ Each entry:
 - **Scope:** backend/app/services/ingest.py, detector.py
 - **Do not:** Let pandas auto-infer dtypes on user-uploaded files.
 
+### 2026-05-22 — Hash strategy must include column name in hash input
+- **Decision:** Hash input for the "hash" strategy must be `project_salt + column_name + value`, not just `project_salt + value`.
+- **Why:** Without column context, identical values in different columns produce identical hashes, making cross-column matching trivial and weakening anonymization. Discovered during /improve audit.
+- **Scope:** backend/app/services/engine.py `generate_mappings()`
+- **Do not:** Hash only `project_salt + value` without the column name.
+
 ---
 
 ## Data & Schema

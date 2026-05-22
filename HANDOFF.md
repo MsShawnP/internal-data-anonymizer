@@ -9,6 +9,18 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-05-22 18:15 — Full /improve pass + dependency upgrades
+
+**Started from:** v1 shipped, code review and dep audit done, /improve not yet run. User lost track of project state.
+
+**Did:** Ran /improve audit (manual + automated). Fixed all 11 findings: jitter export data leak (critical), _infer_dtype crash (critical), hash column isolation, null_rate for CSVs, integer jitter tie-breaking, LIKE wildcard escaping, usecols support, async profiling, filtered export mappings, review page api.ts migration. Fixed 4 a11y warnings. Upgraded Vite 5→6.4, vite-plugin-svelte 4→5, SvelteKit 2.61, plus patch upgrades to Svelte, Faker, pandas, numpy, uvicorn, python-multipart.
+
+**State:** All 81 tests pass, frontend builds with zero warnings. All deps at latest compatible versions. 3 remaining low-severity npm audit issues (cookie in SvelteKit 2.x, unfixable without SvelteKit 3). Next /improve due 2026-06-22.
+
+**Next:** Project is in good shape. Options: browser-test jitter export fix with real data, or verify unchecked definition-of-done items in PLAN.md, or move to other projects.
+
+---
+
 ## 2026-05-16 23:00 — Browser testing, bug fixes, README, ship
 
 **Started from:** All 10 units implemented, 81 tests passing, not yet browser-tested.
