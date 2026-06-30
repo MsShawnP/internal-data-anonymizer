@@ -19,3 +19,9 @@ frontend/.svelte-kit/
 # Data (runtime artifacts)
 backend/data/
 backend/uploads/
+
+# Security - secret leak prevention
+*.pem
+*.key
+credentials.*
+secrets.*
