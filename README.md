@@ -1,21 +1,33 @@
 # Data Anonymizer
 
-A local web application that anonymizes tabular data through a guided column-by-column review workflow. Deterministic project-level mappings in SQLite, format-preserving fakes for product and retail data, and bidirectional reverse lookup.
+A local web application that turns sensitive tabular data into safe, realistic test data — deterministic, format-preserving, and fully reversible by the operator.
 
 ## What it does
 
-Given a CSV, XLSX, JSON, or Parquet file:
+Given a CSV, XLSX, JSON, or Parquet file, the app:
 
 1. **Scans** each column and classifies it (email, phone, UPC/GTIN, name, date, numeric, etc.)
 2. **Proposes** an anonymization strategy per column (fake, jitter, format-preserve, hash, drop, passthrough)
 3. **Lets you review** and override each strategy in a step-by-step UI
 4. **Generates** deterministic replacement values — same input always produces the same output within a project
-5. **Exports** the anonymized file in your choice of format
+5. **Exports** the anonymized file in your choice of format (CSV, XLSX, JSON, or Parquet)
 6. **Provides reverse lookup** so the operator can trace any anonymized value back to the original
 
-Mappings persist at the project level. Upload a second file to the same project and previously-seen values get the same anonymized replacements automatically.
+Mappings persist at the project level. Upload a second file to the same project and previously-seen values get the same anonymized replacements automatically — so joins between files still work after anonymization.
 
-## Setup
+## Why it matters
+
+Sharing real operational data — customer names, pricing, product identifiers — with vendors, contractors, demo audiences, or cloud tools is a data-governance liability. Hand-scrubbing spreadsheets is slow and error-prone, and naive masking breaks the data: identifiers stop validating, distributions flatten, and files no longer join.
+
+This tool solves the parts that make anonymization genuinely hard:
+
+- **Deterministic mappings** keep relationships intact across files and repeat exports
+- **Format-preserving fakes** generate values that still pass downstream validation (e.g., UPCs with valid check digits)
+- **Rank-preserving jitter** keeps numeric distributions analytically useful
+- **Reverse lookup** preserves traceability for the operator without exposing originals to recipients
+- **Everything runs locally** — no data leaves your machine
+
+## Quick start
 
 Requires Python 3.10+ and Node.js 18+.
 
@@ -32,56 +44,15 @@ powershell scripts/dev.ps1
 # Terminal 2: cd frontend && npm run dev
 ```
 
-Open http://localhost:5173 in your browser.
+Open http://localhost:5173, create a project, and upload the included sample (`test-data/sample-retail.csv` — 10 rows of retail transactions with names, emails, phones, UPCs, prices, and dates). The app detects each column type, walks you through strategy review and mapping approval, then exports the anonymized file. Paste any anonymized value into the project search bar to reverse-look-up the original.
 
-## Worked example
+## Tech stack
 
-Using the included test data (`test-data/sample-retail.csv`) — 10 rows of retail transaction data with customer names, emails, phone numbers, product names, UPC codes, prices, quantities, order dates, and zip codes.
+- **Backend:** Python, FastAPI, SQLite, Faker (custom retail/identifier providers)
+- **Frontend:** SvelteKit (Svelte 5, SPA/static mode), Vite
+- **Formats:** CSV, XLSX, JSON, and Parquet — read and write
 
-### 1. Create a project
-
-From the dashboard, type a project name and click **Create Project**.
-
-### 2. Upload a file
-
-Click **Upload File**, select `test-data/sample-retail.csv`, click **Upload & Analyze**.
-
-The system detects column types:
-
-| Column | Detected type | Suggested strategy |
-|--------|--------------|-------------------|
-| customer_name | name | fake |
-| email | email | fake |
-| phone | phone | fake |
-| product_name | name | fake |
-| upc | upc_gtin | format-preserve |
-| price | numeric | jitter |
-| quantity | numeric | jitter |
-| order_date | date | jitter |
-| zip_code | numeric | jitter |
-
-### 3. Review strategies
-
-Step through each column. The UI shows data type, unique count, null rate, sample values, and a strategy dropdown. Confirm each or override as needed.
-
-### 4. Review mappings
-
-After confirming all strategies, click **Generate Mappings**. For each column:
-- **fake** columns show an original → anonymized mapping table. Edit individual values or regenerate all.
-- **jitter** columns show a before/after histogram comparing the original and jittered distributions.
-- **format-preserve** columns generate values matching the structural pattern (e.g., valid UPC check digits).
-
-Approve each column's mappings, or use the **Pattern Rule Editor** to apply bulk templates.
-
-### 5. Export
-
-Choose output format (CSV, XLSX, JSON, or Parquet) and download.
-
-### 6. Reverse lookup
-
-From the project page, paste any anonymized value into the search bar. The system returns the original value, column name, and source file.
-
-## Architecture
+## Project structure
 
 ```
 backend/
@@ -104,19 +75,9 @@ frontend/
 
 ### Key design choices
 
-- **Two-tier SQLite**: Root `app.db` for the project list; per-project `mappings.db` files for isolation and easy deletion.
-- **Deterministic seeding**: `SHA-256(project_salt + column_name + original_value)` seeds Faker. Stored mappings are authoritative after approval.
-- **String-first ingestion**: All files read as `dtype=str` to preserve leading zeros in identifiers (UPCs, GTINs, zip codes). Type detection happens post-read.
-- **No server-side rendering**: Local tool — SvelteKit in SPA/static mode with Vite proxy to FastAPI.
-
-## Supported formats
-
-| Format | Read | Write |
-|--------|------|-------|
-| CSV | Yes | Yes |
-| Excel (.xlsx) | Yes | Yes |
-| JSON | Yes | Yes |
-| Parquet | Yes | Yes |
+- **Two-tier SQLite:** root `app.db` for the project list; per-project `mappings.db` files for isolation and easy deletion
+- **Deterministic seeding:** `SHA-256(project_salt + column_name + original_value)` seeds Faker; stored mappings are authoritative after approval
+- **String-first ingestion:** all files read as `dtype=str` to preserve leading zeros in identifiers (UPCs, GTINs, zip codes); type detection happens post-read
 
 ## Limitations (v1)
 
@@ -125,3 +86,7 @@ frontend/
 - No database connections — file-based only
 - No desktop packaging — runs as a local web server
 - No multi-user access control
+
+## License
+
+MIT — see [LICENSE](LICENSE).
