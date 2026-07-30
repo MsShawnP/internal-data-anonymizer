@@ -30,7 +30,11 @@
 <div class="dashboard">
 	<header>
 		<h1>Data Anonymizer</h1>
-		<p class="subtitle">Project Dashboard</p>
+		<p class="subtitle">
+			Share operational data with vendors, demos, and cloud tools without
+			shipping real customer names, prices, or UPCs — anonymized files that
+			still validate, still join, and still chart like the originals.
+		</p>
 	</header>
 
 	<form class="create-form" onsubmit={(e) => { e.preventDefault(); handleCreate(); }}>
