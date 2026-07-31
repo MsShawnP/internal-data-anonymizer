@@ -43,6 +43,12 @@ Each entry:
 - **Scope:** backend/app/services/ingest.py, detector.py
 - **Do not:** Let pandas auto-infer dtypes on user-uploaded files.
 
+### 2026-07-31 — Anonymization must fail closed, never fail open
+- **Decision:** Any path that produces output for a `fake`/`format-preserve`/`hash` column must either map every non-blank value or refuse. `apply_mappings` raises on an unmapped value (never returns the original), and export generates + persists missing mappings on demand before applying. Jitter blanks non-numeric cells rather than passing them through.
+- **Why:** The cardinal rule for an anonymizer is that real data must never reach the output. The prior `.get(str(v), v)` fallback returned the original on any key miss, leaking real names/emails whenever a mapping was absent — including new values introduced by a second file in a project. Discovered + reproduced during the 2026-07-31 /improve audit.
+- **Scope:** backend/app/services/applier.py, backend/app/services/jitter.py, backend/app/routers/export.py
+- **Do not:** Reintroduce a passthrough fallback (`m.get(k, original)`) or leave a generative column untouched when its mapping is missing. Never let a non-numeric cell in a jitter column pass through as its original value.
+
 ### 2026-05-22 — Hash strategy must include column name in hash input
 - **Decision:** Hash input for the "hash" strategy must be `project_salt + column_name + value`, not just `project_salt + value`.
 - **Why:** Without column context, identical values in different columns produce identical hashes, making cross-column matching trivial and weakening anonymization. Discovered during /improve audit.

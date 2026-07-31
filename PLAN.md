@@ -82,7 +82,12 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 
 ---
 
-## Current Arc: Improvement pass #2 (2026-07-31)
+## Current Arc: (none active)
+
+Improvement pass #2 completed 2026-07-31 — see Arc history below. No active arc;
+next session picks from the optional follow-ups in HANDOFF.md or starts fresh.
+
+## Completed Arc: Improvement pass #2 (2026-07-31)
 
 **Goal:** Close the remaining data-leak paths, fix data-fidelity/robustness bugs, harden the API surface, and clean up dead/duplicated code — all findings from the 2026-07-31 /improve audit (correctness + security + maintainability reviewers, verified against the installed stack).
 
@@ -113,6 +118,20 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 When an arc completes, archive its goal, completion date, and outcome
 here. Then start a new arc above. Provides continuity without bloating
 the active plan.
+
+### 2026-07-31 — Improvement pass #2
+- **Trigger:** User-initiated (`/improve` + code review + UI review) — overdue review (was due 2026-06-22)
+- **What was reviewed:** Full audit + 3 parallel ce reviewers (correctness, security, maintainability) + UI review, verified against the installed stack
+- **What was fixed:**
+  - CRITICAL: export failed open — hash/fake/format-preserve columns exported real values when a mapping was missing (whole-column miss, or new values in a later file). Now fails closed + generates missing mappings on demand at export.
+  - HIGH: jitter blanked non-numeric cells instead of leaking them; dtype-safe write-back; pinned pandas<3.
+  - HIGH: neutralized CSV/formula-injection on csv/xlsx export.
+  - Blank cells stay blank (not hashed/faked); jitter preview now matches export; JSON reader parity (columns + blank nulls); all read_file calls offloaded to threads; typed Pydantic request bodies; id-format path guards; generic error messages; dead-branch/dup-payload/naming cleanups.
+  - npm audit fix: 4 vulns (2 high) → 3 low.
+- **Verified:** 107 tests pass (26 new); critical leak fix confirmed end-to-end in the live app.
+- **Deferred / tracked for next time:** integer-jitter `.0` fidelity; parquet reader NA parity; project-seed formula duplication (export + columns); UI review coverage of dynamic routes; 3 low npm vulns (need SvelteKit 3).
+- **Correction:** correctness reviewer's "export fully broken" claim was based on pandas 3.0.3; installed is 2.3.3 — no crash, real bug was the narrower non-numeric leak.
+- **Next review:** ~2026-10-31
 
 ### 2026-05-22 — Improvement pass
 - **Trigger:** User-initiated (`/improve`) — lost track of project, wanted confidence it works correctly

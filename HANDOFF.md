@@ -9,6 +9,18 @@ For things that didn't work, see FAILURES.md.
 
 ---
 
+## 2026-07-31 11:05 — /improve pass #2 + code review + UI review
+
+**Started from:** v1 shipped; 2026-05-22 pass fixed 11 findings. HANDOFF stale (4 commits since, no /wrap), /improve overdue (was due 2026-06-22).
+
+**Did:** Ran /improve (audit + 3 parallel ce reviewers), UI review, fixed all 12 findings in 8 commits. CRITICAL: export failed open — columns set to hash/fake/format-preserve exported real values when a mapping was missing (whole-column miss, or new values in a second file). Now fails closed + generates missing mappings on demand at export (deterministic, so identical output). Also: jitter blanks non-numeric cells instead of leaking them (+ pin pandas<3); CSV/formula-injection neutralized on csv/xlsx export; blank cells stay blank; jitter preview now matches export; JSON reader parity; all read_file calls offloaded to threads (incl. the one inside apply_mappings — caught at the wrap sibling gate); typed Pydantic request bodies; id-format path guards; generic error messages; dead-branch/dup-payload/naming cleanups; npm audit fix (4 vulns → 3 low). Verified the leak fix end-to-end in the live app (hash column, no generate step → hashed output, 0 originals leaked).
+
+**State:** 107 tests pass (81 + 26 new), frontend builds clean, npm audit 3 low (SvelteKit-3-only, deferred). Working tree clean, all on main. 9 commits ahead of origin — NOT pushed.
+
+**Next:** Optional, all pre-existing/tracked, none blocking: (a) integer-jitter `.0` fidelity (`zip_code`→`90795.0`, because read_file yields strings) + whether zip_code should auto-jitter at all; (b) align parquet reader NA handling with csv/xlsx/json (only unaligned format reader); (c) dedupe the project-seed formula shared by export.py + columns._project_seed; (d) UI review only covers `/` — seed a project to cover /projects/[id]/* routes. Next /improve due ~2026-10-31.
+
+---
+
 ## 2026-05-22 18:15 — Full /improve pass + dependency upgrades
 
 **Started from:** v1 shipped, code review and dep audit done, /improve not yet run. User lost track of project state.
