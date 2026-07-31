@@ -4,6 +4,7 @@ import json
 from fastapi import APIRouter, HTTPException
 
 from ..db import get_upload_path, load_mappings_by_column, project_db, require_project
+from ..schemas import MappingUpdate
 from ..services.engine import generate_mappings
 from ..services.ingest import read_file
 
@@ -95,10 +96,10 @@ async def generate_column_mappings(project_id: str, file_id: str, col_name: str)
 
 
 @router.put("/mappings/{col_name}/{original_value}")
-async def update_single_mapping(project_id: str, col_name: str, original_value: str, body: dict):
+async def update_single_mapping(project_id: str, col_name: str, original_value: str, body: MappingUpdate):
     require_project(project_id)
 
-    new_value = body.get("anonymized")
+    new_value = body.anonymized
     if not new_value or not new_value.strip():
         raise HTTPException(status_code=400, detail="Anonymized value cannot be empty")
 

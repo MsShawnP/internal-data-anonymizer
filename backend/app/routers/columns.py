@@ -5,6 +5,7 @@ import json
 from fastapi import APIRouter, HTTPException
 
 from ..db import get_upload_path, project_db, require_project
+from ..schemas import JitterRequest, StrategyUpdate
 from ..services.ingest import read_file
 from ..services.jitter import apply_jitter
 
@@ -49,10 +50,10 @@ async def list_columns(project_id: str, file_id: str):
 
 
 @router.put("/files/{file_id}/columns/{col_name}/strategy")
-async def update_column_strategy(project_id: str, file_id: str, col_name: str, body: dict):
+async def update_column_strategy(project_id: str, file_id: str, col_name: str, body: StrategyUpdate):
     require_project(project_id)
 
-    strategy = body.get("strategy")
+    strategy = body.strategy
     if strategy not in VALID_STRATEGIES:
         raise HTTPException(
             status_code=400,
@@ -73,10 +74,10 @@ async def update_column_strategy(project_id: str, file_id: str, col_name: str, b
 
 
 @router.post("/files/{file_id}/columns/{col_name}/jitter")
-async def jitter_column(project_id: str, file_id: str, col_name: str, body: dict | None = None):
+async def jitter_column(project_id: str, file_id: str, col_name: str, body: JitterRequest | None = None):
     require_project(project_id)
 
-    alpha = (body or {}).get("alpha", 0.05)
+    alpha = body.alpha if body else 0.05
 
     with project_db(project_id) as pdb:
         file_path = get_upload_path(pdb, file_id)

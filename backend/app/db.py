@@ -1,3 +1,4 @@
+import re
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
@@ -7,7 +8,17 @@ from fastapi import HTTPException
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
 
+# Project and file ids are generated as uuid4().hex[:12]. Validating the shape
+# before it reaches any filesystem path keeps a malformed/traversal id (e.g.
+# "../../etc") from ever building a path, independent of call-site discipline.
+_ID_RE = re.compile(r"^[0-9a-f]{12}$")
+
 _conn: sqlite3.Connection | None = None
+
+
+def _require_valid_id(value: str) -> None:
+    if not isinstance(value, str) or not _ID_RE.fullmatch(value):
+        raise HTTPException(status_code=400, detail="Invalid identifier")
 
 
 def _configure_conn(conn: sqlite3.Connection) -> None:
@@ -55,6 +66,7 @@ def close_db():
 
 @contextmanager
 def project_db(project_id: str):
+    _require_valid_id(project_id)
     project_dir = DATA_DIR / "projects" / project_id
     project_dir.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(project_dir / "mappings.db"), check_same_thread=False)
@@ -88,6 +100,7 @@ def load_mappings_by_column(
 
 
 def get_upload_path(conn: sqlite3.Connection, file_id: str) -> Path:
+    _require_valid_id(file_id)
     file_row = conn.execute("SELECT filename FROM files WHERE id = ?", (file_id,)).fetchone()
     if not file_row:
         raise HTTPException(status_code=404, detail="File not found")

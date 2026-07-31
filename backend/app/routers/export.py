@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
 from ..db import DATA_DIR, get_upload_path, load_mappings_by_column, project_db, require_project
+from ..schemas import ExportRequest
 from ..services.applier import apply_mappings, export_dataframe
 from ..services.engine import generate_mappings
 from ..services.ingest import read_file
@@ -22,10 +23,8 @@ async def export_file_get(project_id: str, file_id: str, format: str = "csv"):
 
 
 @router.post("/export")
-async def export_anonymized(project_id: str, body: dict):
-    file_id = body.get("file_id")
-    fmt = body.get("format", "csv")
-    return await _do_export(project_id, file_id, fmt)
+async def export_anonymized(project_id: str, body: ExportRequest):
+    return await _do_export(project_id, body.file_id, body.format)
 
 
 def _ensure_mappings_cover(

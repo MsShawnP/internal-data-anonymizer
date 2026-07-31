@@ -96,8 +96,8 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 - [x] 5. Jitter preview matches export (same project seed + full column) (columns.py)
 - [x] 6. read_file JSON reader honors columns + keep_default_na parity (ingest.py)
 - [x] 7. Wrap remaining synchronous read_file calls in asyncio.to_thread (export/columns/mappings/upload)
-- [ ] 8. Typed Pydantic request bodies for strategy/mapping/export endpoints (schemas.py + routers)
-- [ ] 9. Defense-in-depth id-format guard in db.py path builders
+- [x] 8. Typed Pydantic request bodies for strategy/mapping/export endpoints (schemas.py + routers)
+- [x] 9. Defense-in-depth id-format guard in db.py path builders
 - [x] 10. Generic client error messages (upload.py, columns.py) — detail dropped, not logged (no logging config in this local tool)
 - [ ] 11. Nice-to-have cleanups: dead sku branch, duplicated hash payload, cross-module `_is_valid_upc` naming, repeated format list
 - [ ] 12. npm audit fix (non-breaking) for postcss + vite highs
