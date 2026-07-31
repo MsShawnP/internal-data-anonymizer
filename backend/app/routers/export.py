@@ -111,7 +111,9 @@ async def _do_export(project_id: str, file_id: str, fmt: str = "csv"):
                 jittered, _ = apply_jitter(df_orig[col], seed=seed_int)
                 jitter_results[col] = jittered
 
-    df = apply_mappings(file_path, column_mappings, column_strategies, jitter_results)
+    df = await asyncio.to_thread(
+        apply_mappings, file_path, column_mappings, column_strategies, jitter_results
+    )
 
     output_dir = DATA_DIR / "projects" / project_id / "exports"
     output_path = export_dataframe(df, output_dir, fmt)
