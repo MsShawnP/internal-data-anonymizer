@@ -25,3 +25,6 @@ backend/uploads/
 *.key
 credentials.*
 secrets.*
+
+# UI review artifacts (regenerated each run)
+screenshots/

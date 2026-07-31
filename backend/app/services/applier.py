@@ -5,6 +5,33 @@ import pandas as pd
 from .ingest import read_file
 
 
+def _is_blank(value) -> bool:
+    """A cell counts as blank if it is null or empty/whitespace-only.
+
+    read_file uses keep_default_na=False, so empty cells arrive as "" rather
+    than NaN; both must be preserved as-is (never anonymized to a fake value).
+    """
+    return pd.isna(value) or str(value).strip() == ""
+
+
+def _anonymize_value(value, mapping: dict[str, str], column: str):
+    """Substitute one cell, failing closed if it has no mapping.
+
+    Blank cells pass through unchanged. Any non-blank value without a mapping
+    raises rather than leaking the original — the cardinal rule for an
+    anonymizer is that real data must never reach the output.
+    """
+    if _is_blank(value):
+        return value
+    key = str(value)
+    if key not in mapping:
+        raise ValueError(
+            f"No anonymization mapping for a value in column '{column}'. "
+            "Refusing to export to avoid leaking original data."
+        )
+    return mapping[key]
+
+
 def apply_mappings(
     file_path: Path,
     column_mappings: dict[str, dict[str, str]],
@@ -37,13 +64,43 @@ def apply_mappings(
                 df[col] = jitter_results[col]
         elif strategy in ("fake", "format-preserve", "hash"):
             mapping = column_mappings.get(col, {})
-            if mapping:
-                df[col] = df[col].map(lambda v, m=mapping: m.get(str(v), v) if pd.notna(v) else v)
+            df[col] = df[col].map(
+                lambda v, m=mapping, c=col: _anonymize_value(v, m, c)
+            )
 
     if drop_cols:
         df = df.drop(columns=drop_cols)
 
     return df
+
+
+_FORMULA_PREFIXES = ("=", "+", "@", "\t", "\r")
+
+
+def _neutralize_cell(value):
+    """Prefix spreadsheet-formula-triggering cells with a quote.
+
+    A cell whose text begins with = + @ (or tab/CR) executes as a formula when
+    the exported CSV/XLSX is opened in Excel/Sheets. Since this tool emits
+    spreadsheets built from arbitrary uploaded data, neutralize those cells.
+    Genuine negative numbers are left intact; only formula-like leading-minus
+    strings are quoted.
+    """
+    if not isinstance(value, str) or value == "":
+        return value
+    first = value[0]
+    if first in _FORMULA_PREFIXES:
+        return "'" + value
+    if first == "-":
+        try:
+            float(value.replace(",", ""))
+        except ValueError:
+            return "'" + value
+    return value
+
+
+def _neutralize_formulas(df: pd.DataFrame) -> pd.DataFrame:
+    return df.map(_neutralize_cell)
 
 
 def export_dataframe(df: pd.DataFrame, output_path: Path, fmt: str) -> Path:
@@ -61,10 +118,10 @@ def export_dataframe(df: pd.DataFrame, output_path: Path, fmt: str) -> Path:
 
     if fmt == "csv":
         path = output_path / "anonymized.csv"
-        df.to_csv(path, index=False)
+        _neutralize_formulas(df).to_csv(path, index=False)
     elif fmt == "xlsx":
         path = output_path / "anonymized.xlsx"
-        df.to_excel(path, index=False, engine="openpyxl")
+        _neutralize_formulas(df).to_excel(path, index=False, engine="openpyxl")
     elif fmt == "json":
         path = output_path / "anonymized.json"
         df.to_json(path, orient="records", indent=2)

@@ -64,7 +64,12 @@ async def generate_column_mappings(project_id: str, file_id: str, col_name: str)
         except (ValueError, KeyError):
             raise HTTPException(status_code=404, detail=f"Column '{col_name}' not in file")
 
-        unique_values = df[col_name].dropna().astype(str).unique().tolist()
+        # Exclude blank/whitespace-only cells: they must stay blank in output,
+        # not be turned into a hash or fake value.
+        unique_values = [
+            v for v in df[col_name].dropna().astype(str).unique().tolist()
+            if v.strip() != ""
+        ]
 
         mappings = generate_mappings(
             unique_values=unique_values,

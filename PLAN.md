@@ -82,28 +82,29 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 
 ---
 
-## Current Arc: Improvement pass (2026-05-22)
+## Current Arc: Improvement pass #2 (2026-07-31)
 
-**Goal:** Fix correctness bugs, strengthen anonymization, and improve code quality across all 11 findings from the /improve audit.
+**Goal:** Close the remaining data-leak paths, fix data-fidelity/robustness bugs, harden the API surface, and clean up dead/duplicated code — all findings from the 2026-07-31 /improve audit (correctness + security + maintainability reviewers, verified against the installed stack).
 
-**Why this arc, why now:** User lost track of the project and wants confidence it works correctly. Audit found 2 critical bugs (jitter export leaks real data, dtype inference crash), plus anonymization weaknesses and code quality issues.
+**Why this arc, why now:** /improve was overdue (due 2026-06-22). Audit reproduced a CRITICAL fail-open leak (columns set to hash/fake/format-preserve export real values when a mapping is missing — including new values in a second file) and a jitter path that passes non-numeric cells through verbatim. User approved fixing the full set including nice-to-haves.
 
 **Tasks:**
-- [x] 1. Fix jitter export — compute jitter at export time so jitter-strategy columns actually get anonymized
-- [x] 2. Fix `_infer_dtype` crash on mixed-type numeric columns (NaN → int cast)
-- [x] 3. Include column name in hash input to prevent cross-column matching
-- [x] 4. Fix null_rate always 0.0 for CSV/XLSX (keep_default_na=False masks blanks)
-- [x] 5. Protect integer jitter from rank-breaking ties after rounding
-- [x] 6. Escape LIKE wildcards in reverse lookup
-- [x] 7. Use usecols in read_file when only one column needed
-- [x] 8. Wrap profile_columns in asyncio.to_thread
-- [x] 9. Filter mappings to file's columns at export
-- [x] 10. Replace raw fetch() calls in review page with api.ts client
-- [x] 11. Document npm audit deferrals (no code change, just tracking)
+- [x] 1. CRITICAL: export fails closed — generate missing mappings on demand + raise on any unmapped value (applier.py, export.py)
+- [ ] 2. HIGH: jitter never passes non-numeric cells through; dtype-safe write-back; pin pandas<3 (jitter.py, requirements.txt)
+- [x] 3. HIGH: neutralize CSV/formula-injection on CSV/XLSX export (applier.py)
+- [x] 4. Blank cells stay blank (not hashed/faked) (mappings.py, applier.py, export.py)
+- [ ] 5. Jitter preview matches export (same project seed + full column) (columns.py)
+- [ ] 6. read_file JSON reader honors columns + keep_default_na parity (ingest.py)
+- [ ] 7. Wrap remaining synchronous read_file calls in asyncio.to_thread (export/columns/mappings/upload)
+- [ ] 8. Typed Pydantic request bodies for strategy/mapping/export endpoints (schemas.py + routers)
+- [ ] 9. Defense-in-depth id-format guard in db.py path builders
+- [ ] 10. Generic client error messages; log detail server-side (upload.py, columns.py)
+- [ ] 11. Nice-to-have cleanups: dead sku branch, duplicated hash payload, cross-module `_is_valid_upc` naming, repeated format list
+- [ ] 12. npm audit fix (non-breaking) for postcss + vite highs
 
-**Out of scope:** npm major version upgrades (SvelteKit/Vite), new features
+**Out of scope:** SvelteKit 3 major upgrade, new features, auto-generating mappings at upload time (kept at export)
 
-**Definition of done:** All 81+ tests pass, each fix verified, no regressions
+**Definition of done:** All tests pass (81 existing + new regression tests for #1/#2/#3/#4), each fix verified, frontend still builds, no regressions
 
 ---
 
