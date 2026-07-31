@@ -16,6 +16,13 @@ router = APIRouter(prefix="/api/projects/{project_id}", tags=["export"])
 
 GENERATIVE_STRATEGIES = ("fake", "format-preserve", "hash")
 
+MEDIA_TYPES = {
+    "csv": "text/csv",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "json": "application/json",
+    "parquet": "application/octet-stream",
+}
+
 
 @router.get("/files/{file_id}/export")
 async def export_file_get(project_id: str, file_id: str, format: str = "csv"):
@@ -63,7 +70,7 @@ def _ensure_mappings_cover(
 async def _do_export(project_id: str, file_id: str, fmt: str = "csv"):
     require_project(project_id)
 
-    if fmt not in ("csv", "xlsx", "json", "parquet"):
+    if fmt not in MEDIA_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported format: {fmt}")
 
     with project_db(project_id) as pdb:
@@ -109,15 +116,8 @@ async def _do_export(project_id: str, file_id: str, fmt: str = "csv"):
     output_dir = DATA_DIR / "projects" / project_id / "exports"
     output_path = export_dataframe(df, output_dir, fmt)
 
-    media_types = {
-        "csv": "text/csv",
-        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "json": "application/json",
-        "parquet": "application/octet-stream",
-    }
-
     return FileResponse(
         path=str(output_path),
-        media_type=media_types[fmt],
+        media_type=MEDIA_TYPES[fmt],
         filename=f"anonymized.{fmt}",
     )

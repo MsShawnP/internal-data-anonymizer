@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
+from .fakers.identifiers import is_valid_upc
+
 
 @dataclass
 class ColumnProfile:
@@ -15,8 +17,6 @@ class ColumnProfile:
     detected_type: str
     stats: dict = field(default_factory=dict)
 
-
-from .fakers.identifiers import _is_valid_upc
 
 THRESHOLD = 0.80
 
@@ -49,7 +49,7 @@ def _classify_column(series: pd.Series) -> tuple[str, str]:
     # UPC/GTIN check (12 or 13 digit numbers with check digit validation)
     digit_only = non_null.apply(lambda v: v.strip().isdigit() and len(v.strip()) in (12, 13))
     if digit_only.sum() / total >= THRESHOLD:
-        valid_checks = non_null.apply(lambda v: _is_valid_upc(v.strip())).sum()
+        valid_checks = non_null.apply(lambda v: is_valid_upc(v.strip())).sum()
         if valid_checks / total > 0.10:
             return "upc_gtin", "format-preserve"
 

@@ -6,7 +6,7 @@ from .fakers.identifiers import (
     EmailProvider,
     PhoneProvider,
     UPCProvider,
-    _is_valid_upc,
+    is_valid_upc,
 )
 from .fakers.patterns import PatternProvider
 from .fakers.retail import RetailProvider
@@ -22,15 +22,22 @@ def _make_faker_with_providers() -> Faker:
     return fake
 
 
+def _key_payload(project_salt: str, column_name: str, value: str) -> bytes:
+    """The bytes keyed by both the fake seed and the hash strategy.
+
+    Kept in one place so the salting scheme can't drift between the two.
+    """
+    return (project_salt + column_name + value).encode()
+
+
 def _compute_seed(project_salt: str, column_name: str, value: str) -> int:
-    raw = (project_salt + column_name + value).encode()
-    return int(hashlib.sha256(raw).hexdigest(), 16)
+    return int(hashlib.sha256(_key_payload(project_salt, column_name, value)).hexdigest(), 16)
 
 
 def _detect_upc_valid_rate(values: list[str]) -> float:
     if not values:
         return 1.0
-    valid_count = sum(1 for v in values if _is_valid_upc(v.strip()))
+    valid_count = sum(1 for v in values if is_valid_upc(v.strip()))
     return valid_count / len(values)
 
 
@@ -58,10 +65,7 @@ def _generate_format_preserve(
     if detected_type == "upc_gtin":
         should_be_valid = fake.random_int(1, 100) <= int(valid_rate * 100)
         return fake.upc(valid=should_be_valid)
-    elif detected_type == "sku":
-        return fake.pattern_match(value)
-    else:
-        return fake.pattern_match(value)
+    return fake.pattern_match(value)
 
 
 def generate_mappings(
@@ -89,7 +93,7 @@ def generate_mappings(
 
         if strategy == "hash":
             mappings[value] = hashlib.sha256(
-                (project_salt + column_name + value).encode()
+                _key_payload(project_salt, column_name, value)
             ).hexdigest()[:12]
         elif strategy == "fake":
             mappings[value] = _generate_fake(fake, value, detected_type)

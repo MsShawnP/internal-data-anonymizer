@@ -10,7 +10,7 @@ from app.services.fakers.identifiers import (
     PhoneProvider,
     UPCProvider,
     _compute_upc_check_digit,
-    _is_valid_upc,
+    is_valid_upc,
 )
 from app.services.fakers.patterns import (
     PatternProvider,
@@ -37,19 +37,19 @@ class TestUPCProvider:
     def test_valid_check_digit(self, fake):
         for _ in range(50):
             code = fake.upc(valid=True)
-            assert _is_valid_upc(code), f"Invalid UPC generated: {code}"
+            assert is_valid_upc(code), f"Invalid UPC generated: {code}"
 
     def test_invalid_check_digit(self, fake):
         for _ in range(50):
             code = fake.upc(valid=False)
-            assert not _is_valid_upc(code), f"Valid UPC when invalid expected: {code}"
+            assert not is_valid_upc(code), f"Valid UPC when invalid expected: {code}"
 
     def test_batch_valid_rate(self, fake):
         """92 valid + 8 invalid originals -> output has ~8 invalid fakes."""
         batch = fake.upc_batch(count=100, valid_rate=0.92)
         assert len(batch) == 100
 
-        valid_count = sum(1 for code in batch if _is_valid_upc(code))
+        valid_count = sum(1 for code in batch if is_valid_upc(code))
         invalid_count = 100 - valid_count
 
         # Should be approximately 92 valid and 8 invalid

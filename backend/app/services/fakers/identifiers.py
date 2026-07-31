@@ -12,8 +12,11 @@ def _compute_upc_check_digit(digits_11: list[int]) -> int:
     return (10 - total % 10) % 10
 
 
-def _is_valid_upc(code: str) -> bool:
-    """Validate a 12-digit UPC-A or 13-digit EAN-13 code."""
+def is_valid_upc(code: str) -> bool:
+    """Validate a 12-digit UPC-A or 13-digit EAN-13 code.
+
+    Public: imported by detector.py and engine.py to gauge UPC validity rates.
+    """
     if not code.isdigit() or len(code) not in (12, 13):
         return False
     digits = [int(d) for d in code]
