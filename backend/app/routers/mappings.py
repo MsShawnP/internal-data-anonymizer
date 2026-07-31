@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from fastapi import APIRouter, HTTPException
@@ -60,7 +61,7 @@ async def generate_column_mappings(project_id: str, file_id: str, col_name: str)
         file_row = pdb.execute("SELECT filename FROM files WHERE id = ?", (file_id,)).fetchone()
 
         try:
-            df = read_file(file_path, columns=[col_name])
+            df = await asyncio.to_thread(read_file, file_path, columns=[col_name])
         except (ValueError, KeyError):
             raise HTTPException(status_code=404, detail=f"Column '{col_name}' not in file")
 

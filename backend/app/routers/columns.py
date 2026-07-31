@@ -1,3 +1,5 @@
+import asyncio
+import hashlib
 import json
 
 from fastapi import APIRouter, HTTPException
@@ -9,6 +11,11 @@ from ..services.jitter import apply_jitter
 router = APIRouter(prefix="/api/projects/{project_id}", tags=["columns"])
 
 VALID_STRATEGIES = {"fake", "jitter", "format-preserve", "hash", "drop", "passthrough"}
+
+
+def _project_seed(project_id: str) -> int:
+    """Deterministic jitter seed derived from the project (matches export)."""
+    return int(hashlib.sha256(project_id.encode()).hexdigest(), 16) % (2**31)
 
 
 @router.get("/files/{file_id}/columns")
@@ -74,14 +81,17 @@ async def jitter_column(project_id: str, file_id: str, col_name: str, body: dict
     with project_db(project_id) as pdb:
         file_path = get_upload_path(pdb, file_id)
 
-    df = read_file(file_path)
+    df = await asyncio.to_thread(read_file, file_path)
     if col_name not in df.columns:
         raise HTTPException(status_code=404, detail=f"Column '{col_name}' not in file")
 
-    series = df[col_name].dropna()
+    # Use the same project-derived seed and full column as export so the
+    # previewed histogram matches the data that actually gets exported.
     try:
-        jittered, histogram_data = apply_jitter(series, alpha=alpha)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Jitter failed: {e}")
+        _, histogram_data = apply_jitter(
+            df[col_name], alpha=alpha, seed=_project_seed(project_id)
+        )
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not jitter this column")
 
     return histogram_data

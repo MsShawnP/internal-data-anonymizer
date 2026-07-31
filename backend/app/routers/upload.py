@@ -57,10 +57,13 @@ async def upload_file(project_id: str, file: UploadFile):
             await out.write(chunk)
 
     try:
-        df = read_file(save_path)
-    except Exception as e:
+        df = await asyncio.to_thread(read_file, save_path)
+    except Exception:
         save_path.unlink(missing_ok=True)
-        raise HTTPException(status_code=400, detail=f"Failed to parse file: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail="Could not parse file. Check that it is a valid CSV, XLSX, JSON, or Parquet file.",
+        )
 
     profiles = await asyncio.to_thread(profile_columns, df)
 
