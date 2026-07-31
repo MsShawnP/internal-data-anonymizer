@@ -2,6 +2,11 @@ import numpy as np
 import pandas as pd
 
 
+def _is_blank(value) -> bool:
+    """Null or empty/whitespace-only (read_file yields "" for blank cells)."""
+    return pd.isna(value) or str(value).strip() == ""
+
+
 def apply_jitter(
     series: pd.Series,
     alpha: float = 0.05,
@@ -12,9 +17,9 @@ def apply_jitter(
 
     Returns the jittered series and histogram data for before/after comparison.
     """
-    numeric = pd.to_numeric(series, errors="coerce")
-    null_mask = numeric.isna()
-    non_null = numeric[~null_mask]
+    coerced = pd.to_numeric(series, errors="coerce")
+    numeric_mask = coerced.notna()
+    non_null = coerced[numeric_mask]
 
     if len(non_null) == 0:
         return series.copy(), _empty_histogram()
@@ -59,8 +64,18 @@ def apply_jitter(
         max_decimals = _detect_precision(non_null)
         rank_preserved = np.round(rank_preserved, max_decimals)
 
-    result = series.copy()
-    result[~null_mask] = rank_preserved
+    # Object dtype makes the numeric write-back safe regardless of the input
+    # series dtype (read_file yields str-typed columns).
+    result = series.astype(object).copy()
+    result[numeric_mask] = rank_preserved
+
+    # A non-numeric, non-blank cell in a jitter column is dirty data that
+    # to_numeric could not parse. Blank it rather than pass the original
+    # through — jitter must never leak a real value. Genuine null/blank cells
+    # are left as-is so the null structure is preserved.
+    dirty_mask = (~numeric_mask) & series.map(lambda v: not _is_blank(v))
+    if dirty_mask.any():
+        result[dirty_mask] = ""
 
     histograms = _compute_histograms(
         pd.Series(values), pd.Series(rank_preserved)

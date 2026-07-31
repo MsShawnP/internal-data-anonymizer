@@ -90,7 +90,7 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 
 **Tasks:**
 - [x] 1. CRITICAL: export fails closed — generate missing mappings on demand + raise on any unmapped value (applier.py, export.py)
-- [ ] 2. HIGH: jitter never passes non-numeric cells through; dtype-safe write-back; pin pandas<3 (jitter.py, requirements.txt)
+- [x] 2. HIGH: jitter never passes non-numeric cells through; dtype-safe write-back; pin pandas<3 (jitter.py, requirements.txt)
 - [x] 3. HIGH: neutralize CSV/formula-injection on CSV/XLSX export (applier.py)
 - [x] 4. Blank cells stay blank (not hashed/faked) (mappings.py, applier.py, export.py)
 - [ ] 5. Jitter preview matches export (same project seed + full column) (columns.py)

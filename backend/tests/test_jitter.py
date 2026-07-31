@@ -87,6 +87,31 @@ class TestJitterStatistical:
             assert result.iloc[i] <= result.iloc[i + 1]
 
 
+class TestJitterDirtyData:
+    """A jitter column must never leak a non-numeric original value."""
+
+    def test_non_numeric_cell_blanked_not_leaked(self):
+        series = pd.Series(["10", "20", "30", "40", "SSN-123-45-6789"])
+        result, _ = apply_jitter(series, seed=7)
+        assert result.iloc[4] == ""  # dirty string blanked, not passed through
+        assert "SSN-123-45-6789" not in list(result)
+        # numeric cells still jittered to numbers
+        assert all(isinstance(float(result.iloc[i]), float) for i in range(4))
+
+    def test_str_dtype_series_does_not_crash(self):
+        # read_file yields object/str columns; write-back must be dtype-safe.
+        series = pd.Series(["100", "200", "300"], dtype="object")
+        result, _ = apply_jitter(series, seed=7)
+        assert len(result) == 3
+        assert all(result.iloc[i] not in ("100", "200", "300") for i in range(3))
+
+    def test_blank_cells_preserved_among_dirty(self):
+        series = pd.Series(["10", "", "30", "junk", "50"])
+        result, _ = apply_jitter(series, seed=7)
+        assert result.iloc[1] == ""   # originally blank stays blank
+        assert result.iloc[3] == ""   # dirty string blanked
+
+
 class TestHistogramOutput:
     def test_histogram_structure(self):
         series = pd.Series([10, 20, 30, 40, 50, 60, 70, 80])
