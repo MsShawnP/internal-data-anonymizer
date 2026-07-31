@@ -100,7 +100,7 @@ All implementation units from `docs/plans/2026-05-16-001-feat-data-anonymizer-pl
 - [x] 9. Defense-in-depth id-format guard in db.py path builders
 - [x] 10. Generic client error messages (upload.py, columns.py) — detail dropped, not logged (no logging config in this local tool)
 - [x] 11. Nice-to-have cleanups: dead sku branch, duplicated hash payload, cross-module `_is_valid_upc` naming, repeated format list
-- [ ] 12. npm audit fix (non-breaking) for postcss + vite highs
+- [x] 12. npm audit fix (non-breaking) for postcss + vite highs — 4 vulns → 3 low (SvelteKit-3-only, deferred)
 
 **Out of scope:** SvelteKit 3 major upgrade, new features, auto-generating mappings at upload time (kept at export)
 
