@@ -1,0 +1,47 @@
+project: internal-data-anonymizer
+base_url: http://localhost:5173
+
+# Note: the app is a SvelteKit SPA. Only "/" renders without a seeded
+# project in the DB; all /projects/[id]/* routes are dynamic and need a
+# real project id. Re-run with a seeded project to cover those.
+
+routes:
+  - path: /
+    name: Dashboard
+
+forbidden_content:
+  - pattern: "TODO|FIXME|HACK|XXX"
+    severity: warning
+    reason: Dev markers in production code
+    exclude:
+      - "*.md"
+      - "**/.svelte-kit/**"
+      - "**/build/**"
+      - "**/node_modules/**"
+  - pattern: "password\\s*=|api_key\\s*=|secret\\s*="
+    severity: fail
+    reason: Possible hardcoded credentials
+    exclude:
+      - "*.md"
+      - "**/.svelte-kit/**"
+      - "**/build/**"
+      - "**/node_modules/**"
+
+dom_checks:
+  - route: /
+    elements:
+      - selector: h1
+        label: Main heading present
+      - selector: .subtitle
+        label: Value-proposition subtitle present
+      - selector: .create-form
+        label: Create-project form present
+    absent:
+      - selector: .status.error
+        label: No API error state on load
+
+layout:
+  - route: /
+    checks:
+      - name: No horizontal scroll
+        assert: no_horizontal_scroll
