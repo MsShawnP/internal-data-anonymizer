@@ -73,12 +73,27 @@ async def generate_column_mappings(project_id: str, file_id: str, col_name: str)
             if v.strip() != ""
         ]
 
+        # Fakes already stored for this column under originals we are NOT
+        # regenerating (e.g. values seen only in other files) stay reserved,
+        # so a new fake can never collide with them.
+        existing_rows = pdb.execute(
+            "SELECT original, anonymized FROM mappings WHERE column_name = ?",
+            (col_name,),
+        ).fetchall()
+        regenerating = set(unique_values)
+        existing_fakes = {
+            row["anonymized"]
+            for row in existing_rows
+            if row["original"] not in regenerating
+        }
+
         mappings = generate_mappings(
             unique_values=unique_values,
             strategy=strategy,
             column_name=col_name,
             project_salt=project_id,
             detected_type=detected_type,
+            existing_fakes=existing_fakes,
         )
 
         for original, anonymized in mappings.items():

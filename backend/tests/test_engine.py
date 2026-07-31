@@ -147,3 +147,51 @@ class TestFormatPreserve:
             assert generated[0:2].isalpha()
             assert generated[3:7].isdigit()
             assert generated[8].isalpha()
+
+
+class TestMappingUniqueness:
+    """Distinct originals must map to distinct fakes (1:1 within a column)."""
+
+    def test_250_distinct_names_produce_250_distinct_fakes(self):
+        # The curated retail-name pool has ~190 entries, so without collision
+        # handling 250 originals cannot stay distinct (pigeonhole).
+        values = [f"Person {i}" for i in range(250)]
+        result = generate_mappings(values, "fake", "customer_name", "salt", "name")
+        assert len(result) == 250
+        assert len(set(result.values())) == 250
+
+    def test_mapping_round_trips_uniquely(self):
+        values = [f"Person {i}" for i in range(250)]
+        result = generate_mappings(values, "fake", "customer_name", "salt", "name")
+        reverse = {fake: orig for orig, fake in result.items()}
+        assert len(reverse) == len(result)  # no fake shared by two originals
+        for orig, fake in result.items():
+            assert reverse[fake] == orig
+
+    def test_collision_suffixes_are_deterministic(self):
+        values = [f"Person {i}" for i in range(250)]
+        r1 = generate_mappings(values, "fake", "customer_name", "salt", "name")
+        r2 = generate_mappings(values, "fake", "customer_name", "salt", "name")
+        assert r1 == r2
+
+    def test_existing_fakes_are_reserved(self):
+        # A fake persisted for another original (e.g. from an earlier file)
+        # must not be reused; the collision gets a stable " 2" suffix.
+        base = generate_mappings(["Some Value"], "fake", "col", "salt", "name")
+        taken = base["Some Value"]
+        result = generate_mappings(
+            ["Some Value"], "fake", "col", "salt", "name",
+            existing_fakes={taken},
+        )
+        assert result["Some Value"] != taken
+        assert result["Some Value"] == f"{taken} 2"
+
+    def test_format_preserve_mappings_are_unique(self):
+        values = [f"CH-{i:04d}" for i in range(500)]
+        result = generate_mappings(values, "format-preserve", "sku", "salt", "sku")
+        assert len(set(result.values())) == 500
+
+    def test_hash_mappings_are_unique(self):
+        values = [f"row-{i}" for i in range(500)]
+        result = generate_mappings(values, "hash", "col", "salt", "generic_string")
+        assert len(set(result.values())) == 500

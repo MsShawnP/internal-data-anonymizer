@@ -57,6 +57,9 @@ def _ensure_mappings_cover(
             column_name=col,
             project_salt=project_id,
             detected_type=detected_types.get(col, "generic_string"),
+            # Keep new fakes distinct from every fake already stored for this
+            # column, so reverse lookup stays unambiguous across files.
+            existing_fakes=set(existing.values()),
         )
         for original, anonymized in new_maps.items():
             pdb.execute(

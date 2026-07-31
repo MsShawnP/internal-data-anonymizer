@@ -68,13 +68,38 @@ def _generate_format_preserve(
     return fake.pattern_match(value)
 
 
+def _dedupe_fake(candidate: str, used: set[str]) -> str:
+    """Make a generated fake unique within its column mapping.
+
+    Distinct originals must never share a fake: a collision merges two
+    entities in the export and makes reverse lookup ambiguous. On collision
+    the candidate is deterministically extended with a stable numeric suffix
+    ("Spark Electronics" -> "Spark Electronics 2", then "... 3", ...), so the
+    same inputs always produce the same mapping.
+    """
+    if candidate not in used:
+        return candidate
+    n = 2
+    while f"{candidate} {n}" in used:
+        n += 1
+    return f"{candidate} {n}"
+
+
 def generate_mappings(
     unique_values: list[str],
     strategy: str,
     column_name: str,
     project_salt: str,
     detected_type: str = "generic_string",
+    existing_fakes: set[str] | None = None,
 ) -> dict[str, str]:
+    """Generate a deterministic 1:1 original->anonymized mapping.
+
+    ``existing_fakes`` carries anonymized values already persisted for this
+    column (e.g. from earlier files in the project); new fakes are kept
+    distinct from them as well, so uniqueness holds across the whole stored
+    column mapping, not just this batch.
+    """
     if strategy == "drop":
         return {}
 
@@ -86,20 +111,27 @@ def generate_mappings(
         valid_rate = _detect_upc_valid_rate(unique_values)
 
     fake = _make_faker_with_providers()
+    used: set[str] = set(existing_fakes) if existing_fakes else set()
     mappings: dict[str, str] = {}
     for value in unique_values:
         seed = _compute_seed(project_salt, column_name, value)
         fake.seed_instance(seed)
 
         if strategy == "hash":
-            mappings[value] = hashlib.sha256(
+            candidate = hashlib.sha256(
                 _key_payload(project_salt, column_name, value)
             ).hexdigest()[:12]
         elif strategy == "fake":
-            mappings[value] = _generate_fake(fake, value, detected_type)
+            candidate = _generate_fake(fake, value, detected_type)
         elif strategy == "format-preserve":
-            mappings[value] = _generate_format_preserve(
+            candidate = _generate_format_preserve(
                 fake, value, detected_type, valid_rate
             )
+        else:
+            continue
+
+        candidate = _dedupe_fake(candidate, used)
+        used.add(candidate)
+        mappings[value] = candidate
 
     return mappings

@@ -92,6 +92,10 @@ async def jitter_column(project_id: str, file_id: str, col_name: str, body: Jitt
         _, histogram_data = apply_jitter(
             df[col_name], alpha=alpha, seed=_project_seed(project_id)
         )
+    except ValueError as exc:
+        # e.g. "jitter unsupported for this column type; choose another
+        # strategy" — surface the reason instead of a generic message.
+        raise HTTPException(status_code=400, detail=str(exc))
     except Exception:
         raise HTTPException(status_code=400, detail="Could not jitter this column")
 
