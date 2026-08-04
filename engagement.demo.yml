@@ -1,6 +1,6 @@
 # Demo engagement config for the anonymizer (safe to deploy: demo: true).
 client:
-  name: "Cinderhaven Foods (demo)"
+  name: "Cinderhaven Provisions (demo)"
 engagement:
   id: "DEMO-ANON-001"
 as_of_date: "2026-01-31"
