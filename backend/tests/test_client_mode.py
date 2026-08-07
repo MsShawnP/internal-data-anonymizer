@@ -104,3 +104,65 @@ def test_final_drops_watermark(engagement):
     result = client_mode.run(cfg, src, out, final=True)
     html = open(result["report"], encoding="utf-8").read()
     assert "ll-draft" not in html
+
+
+def test_measure_passes_through(engagement):
+    # (a) amount is a MEASURE (decimals + measure name) -> passed through untouched,
+    # and disclosed as such in the report.
+    cfg, src, out = engagement
+    result = client_mode.run(cfg, src, out)
+    plans = {p.name: p for p in result["plans"]}
+    assert plans["amount"].detected_type == "numeric"
+    assert plans["amount"].strategy == "passthrough"
+    html = open(result["report"], encoding="utf-8").read()
+    assert "passed through" in html and "amount" in html
+
+
+def test_zip_numeric_not_passed_through_keeps_shape(engagement):
+    # (b) ship_zip is numeric but an identifier -> NOT passed through; anonymized with
+    # 5-digit shape preserved, each row changed.
+    cfg, src, out = engagement
+    result = client_mode.run(cfg, src, out)
+    plans = {p.name: p for p in result["plans"]}
+    assert plans["ship_zip"].detected_type == "numeric"
+    assert plans["ship_zip"].strategy != "passthrough"
+    df = pd.read_csv(result["output"], dtype=str)
+    orig = ["02134", "08079", "10001", "60601"]
+    out_zips = list(df["ship_zip"])
+    assert all(len(z) == 5 and z.isdigit() for z in out_zips)   # leading-zero shape kept
+    assert all(out_zips[i] != orig[i] for i in range(4))        # each zip anonymized
+
+
+def test_identifier_numeric_not_passed_through(tmp_path):
+    # (c) account_number is numeric + identifier-shaped (leading zero, fixed width,
+    # identifier name) -> NOT passed through. Proves the class is closed, not the
+    # zip instance patched. amount in the same file still passes through.
+    csv = ("account_number,amount\n"
+           "00041827,100.50\n00517340,200.00\n10293847,300.25\n00000042,50.00\n")
+    cfg = tmp_path / "engagement.demo.yml"
+    cfg.write_text(_CONFIG, encoding="utf-8")
+    src = tmp_path / "acct.csv"
+    src.write_text(csv, encoding="utf-8")
+    out = tmp_path / "client-output"
+    result = client_mode.run(str(cfg), str(src), str(out))
+    plans = {p.name: p for p in result["plans"]}
+    assert plans["account_number"].detected_type == "numeric"
+    assert plans["account_number"].strategy != "passthrough"
+    assert plans["amount"].strategy == "passthrough"
+    df = pd.read_csv(result["output"], dtype=str)
+    orig = ["00041827", "00517340", "10293847", "00000042"]
+    assert all(list(df["account_number"])[i] != orig[i] for i in range(4))
+
+
+def test_named_numeric_is_anonymized(tmp_path):
+    # (d) naming a numeric under anonymize.strategies overrides the measure passthrough
+    # and anonymizes it.
+    cfg = tmp_path / "engagement.demo.yml"
+    cfg.write_text(_CONFIG.replace("    ssn: hash", "    ssn: hash\n    amount: jitter"),
+                   encoding="utf-8")
+    src = tmp_path / "sample.csv"
+    src.write_text(_CSV, encoding="utf-8")
+    out = tmp_path / "client-output"
+    result = client_mode.run(str(cfg), str(src), str(out))
+    plans = {p.name: p for p in result["plans"]}
+    assert plans["amount"].strategy == "jitter"

@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import html
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -61,11 +62,51 @@ def _project_salt(config) -> str:
     ).hexdigest()
 
 
+# Fix 3 (Option B): a numeric column is passed through UNTOUCHED only when confidently
+# a MEASURE (money/quantity) — name matches measure vocabulary AND values look
+# continuous (decimals or wide range), with NO identifier tell (identifier name,
+# leading zero, or fixed width). Everything else numeric is anonymized. Fail-safe: on
+# any doubt, not a measure -> anonymize.
+_MEASURE_WORDS = {
+    "amount", "amt", "price", "cost", "revenue", "total", "subtotal", "qty",
+    "quantity", "weight", "units", "unit", "margin", "spend", "sales", "dollars",
+    "value", "net", "gross", "fee", "balance", "rate",
+}
+_IDENTIFIER_WORDS = {
+    "zip", "postal", "id", "account", "member", "employee", "phone", "ssn",
+    "number", "num", "code", "fax", "license", "routing", "card", "serial",
+}
+
+
+def _is_measure(name: str, series: pd.Series) -> bool:
+    tokens = {t for t in re.split(r"[^a-z0-9]+", name.strip().lower()) if t}
+    if tokens & _IDENTIFIER_WORDS:
+        return False
+    if not (tokens & _MEASURE_WORDS):
+        return False
+    vals = series.dropna().astype(str).str.strip()
+    vals = vals[vals != ""]
+    if len(vals) == 0:
+        return False
+    if vals.str.match(r"^0\d").any():                    # leading zero -> identifier-like
+        return False
+    if len(vals) > 1 and vals.str.len().nunique() == 1:  # fixed width -> identifier-like
+        return False
+    has_decimals = vals.str.contains(".", regex=False).any()
+    nums = pd.to_numeric(vals, errors="coerce").dropna()
+    wide_range = (
+        len(nums) >= 4 and nums.nunique() > 3
+        and (float(nums.max()) - float(nums.min())) >= 100
+    )
+    return bool(has_decimals or wide_range)
+
+
 def build_plan(frame: pd.DataFrame, config) -> list[ColumnPlan]:
     """Detect a strategy per column, then apply engagement.yml overrides."""
     overrides = config.raw.get("anonymize", {}) if isinstance(config.raw, dict) else {}
     strat_over = overrides.get("strategies", {}) or {}
     type_over = overrides.get("types", {}) or {}
+    passthrough_over = set(overrides.get("passthrough", []) or [])
 
     plans: list[ColumnPlan] = []
     for prof in profile_columns(frame):
@@ -75,9 +116,17 @@ def build_plan(frame: pd.DataFrame, config) -> list[ColumnPlan]:
         if prof.name in type_over:
             detected = type_over[prof.name]
             source = "config"
+        # Explicit config wins both directions; otherwise a numeric column passes
+        # through only if it is confidently a measure, else it is anonymized
+        # format-preserving. (Date jitter/shift is unaffected.)
         if prof.name in strat_over:
             strategy = strat_over[prof.name]
             source = "config"
+        elif prof.name in passthrough_over:
+            strategy = "passthrough"
+            source = "config"
+        elif strategy == "jitter" and detected == "numeric":
+            strategy = "passthrough" if _is_measure(prof.name, frame[prof.name]) else "format-preserve"
         plans.append(ColumnPlan(
             name=prof.name,
             detected_type=detected,
@@ -157,6 +206,30 @@ def _render_report_html(config, plans, read_result, provenance, *, draft: bool) 
             + esc(", ".join(revealed))
             + " — confirm these carry no sensitive data before sharing.</p>"
         )
+    # Fix 3 disclosure (the real safety net): list every numeric column passed through
+    # UNTOUCHED and why, so a wrong call ("ship_zip — passed through as measure") is
+    # visible to an operator rather than silent.
+    untouched = [p for p in plans
+                 if p.detected_type == "numeric" and p.strategy == "passthrough"]
+    if untouched:
+        items = "".join(
+            "<li><span class=mono>" + esc(p.name) + "</span> — passed through "
+            + ("(config)" if p.source == "config" else "as measure") + "</li>"
+            for p in untouched
+        )
+        money_note = (
+            "<div class=ll-warn><strong>Numeric columns passed through UNTOUCHED "
+            "(not anonymized):</strong><ul>" + items + "</ul>"
+            "Confirm each is genuinely a measure (money/quantity), not an identifier — "
+            "these values are <strong>not</strong> anonymized. To anonymize one, name it "
+            "under <span class=mono>anonymize.strategies</span>.</div>"
+        )
+    else:
+        money_note = (
+            "<div class=ll-safe><strong>No numeric column was passed through untouched.</strong> "
+            "Every numeric column was anonymized; measures are passed through only when "
+            "confidently identified.</div>"
+        )
     css = _report_css(draft)
     return f"""<!doctype html>
 <html lang=en><head><meta charset=utf-8>
@@ -175,6 +248,7 @@ def _render_report_html(config, plans, read_result, provenance, *, draft: bool) 
     <div><span class=ll-k>Rows</span> {read_result.n_rows:,}</div>
   </div>
 </header>
+{money_note}
 <section class=ll-section>
   <h2 class=ll-h2>What was transformed, and how</h2>
   <table class=ll-table>
@@ -213,7 +287,8 @@ body{{margin:0;background:{P.LL_CANVAS};color:{P.LL_TEXT};font-family:var(--f);l
 .ll-badge{{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:2px}}
 .mono{{font-family:ui-monospace,Consolas,monospace;font-size:12px}}
 .num{{text-align:right;font-variant-numeric:tabular-nums}}
-.ll-warn{{background:{P.LL_SG_SURFACE};color:{P.LL_SG_DARK};padding:12px 16px;border-radius:2px;margin-top:16px}}
+.ll-warn{{background:{P.LL_SG_SURFACE};color:{P.LL_SG_DARK};padding:12px 16px;border-radius:2px;margin:16px 0}}
+.ll-safe{{background:{P.LL_HK_SURFACE};color:{P.LL_HK_DARK};padding:12px 16px;border-radius:2px;margin:0 0 24px}}
 .ll-provenance{{margin-top:40px;background:{P.LL_CARD_BG};color:{P.LL_CARD_TEXT};padding:20px 24px;border-radius:2px;font-size:13px}}
 .ll-prov-title{{font-family:var(--s);font-weight:700;font-size:16px;margin-bottom:8px}}
 .ll-provenance div{{margin-bottom:4px;color:{P.LL_CARD_SUBTITLE}}}
